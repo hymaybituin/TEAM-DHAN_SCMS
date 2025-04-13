@@ -23,7 +23,7 @@ return new class extends Migration
             $table->decimal('profit_margin', 5, 2);
             $table->string('image_url')->nullable();
             $table->foreignId('supplier_id')->nullable()->constrained('suppliers');
-            $table->decimal('supplier_price', 5, 2);
+            $table->decimal('supplier_price', 15, 2);
             $table->foreignId('location_id')->nullable()->constrained('locations');
             $table->foreignId('warehouse_id')->nullable()->constrained('warehouses');
             $table->foreignId('status_id')->constrained('statuses');
