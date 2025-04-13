@@ -107,4 +107,15 @@ class Product extends Model
         return $this->belongsToMany(Tag::class, 'product_tags');
     }
 
+    public function incomingStocks()
+    {
+        return $this->hasMany(IncomingStock::class, 'product_id');
+    }
+
+    public function availableQuantity()
+    {
+        return $this->incomingStocks()->sum('quantity'); // Get total stock quantity
+    }
+
+
 }

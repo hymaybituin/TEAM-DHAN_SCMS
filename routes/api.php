@@ -34,6 +34,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::get('/purchaseOrders/{purchaseOrderId?}', [PurchaseOrderController::class, 'getPurchaseOrderDetails']);
 
-Route::get('productsWithQuantityAndStatus', [ProductController::class, 'getProductsWithQuantityAndStatus']);
+Route::get('getAllProducts', [ProductController::class, 'getAllProducts']);
 
 

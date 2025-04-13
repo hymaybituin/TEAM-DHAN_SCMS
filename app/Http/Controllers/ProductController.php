@@ -147,117 +147,87 @@ class ProductController extends Controller
     }*/
 
 
-    public function getProductsWithQuantityAndStatus()
-    {
-        $productTypes = ProductType::with([
-            'productGroups.products.incomingStocks',
-            'productGroups.products.purchaseOrderItems.purchaseOrder.supplier'
-        ])
-        ->get()
-        ->map(function ($productType) {
-            $productGroups = $productType->productGroups->map(function ($productGroup) {
-                $products = $productGroup->products->map(function ($product) {
-                    // Determine if the product is equipment or consumable
-                    $isEquipment = strtolower($product->productGroup->productType->name) === 'equipment';
-    
-                    // Adjust available stock calculation
-                    $availableStocks = $isEquipment 
-                        ? $product->incomingStocks // Keep all stocks for equipment 
-                        : $product->incomingStocks->filter(function ($stock) {
-                            return Carbon::parse($stock->expiration_date)->isFuture();
-                        });
-    
-                    // Calculate total available quantity
-                    $availableQuantity = $availableStocks->sum('quantity');
-    
-                    // Retrieve profit margin from the product level
-                    $profitMargin = $product->profit_margin ?? 0;
-    
-                    $productData = [
-                        'id' => $product->id,
-                        'name' => $product->name,
-                        'sku' => $product->sku,
-                        'barcode' => $product->barcode,
-                        'description' => $product->description,
-                        'model' => $product->model,
-                        'minimum_quantity' => $product->minimum_quantity,
-                        'available_quantity' => $availableQuantity,
-                        'profit_margin' => round($profitMargin, 2) . '%',
-                        'quantity_level' => $availableQuantity < $product->minimum_quantity ? 'Below Minimum' : 'Above Minimum',
-                        'image_url' => $product->image_url,
-                        'product_category_id' => $product->product_category_id,
-                        'product_category' => $product->productCategory ? $product->productCategory->name : null,
-                        'created_at' => $product->created_at,
-                        'updated_at' => $product->updated_at,
-                        'status_id' => $product->status,
-                        'created_by' => $product->creator,
-                        'updated_by' => $product->updater,
-                        'location' => $product->location,
-                        'warehouse' => $product->warehouse,
-                        
+   
+
+public function getAllProducts()
+{
+    $products = Product::with([
+        'productUnit',
+        'supplier',
+        'location',
+        'warehouse',
+        'status',
+        'creator',
+        'updater',
+        'tags',
+        'incomingStocks'
+    ])
+    ->get()
+    ->map(function ($product) {
+        $availableQuantity = $product->incomingStocks
+            ->filter(fn($stock) => is_null($stock->expiration_date) || !Carbon::parse($stock->expiration_date)->isPast())
+            ->sum('quantity');
+
+        if ($product->incomingStocks->isNotEmpty()) {
+            $groupedStocks = $product->incomingStocks
+                ->groupBy(fn($stock) => implode('|', [
+                    $stock->purchase_order_item_id,
+                    $stock->serial_number ?? 'NULL',
+                    $stock->lot_number ?? 'NULL',
+                    $stock->expiration_date ?? 'NULL',
+                    $stock->product_id
+                ]))
+                ->map(function ($stocks) {
+                    $firstStock = $stocks->first();
+                    $remainingTimeString = null;
+
+                    if (is_null($firstStock->lot_number) || is_null($firstStock->expiration_date)) {
+                        $status = 'INSTOCK';
+                    } else {
+                        $expirationDate = Carbon::parse($firstStock->expiration_date);
+                        $today = Carbon::today();
+                        $remainingTime = $today->diff($expirationDate);
+
+                        if ($expirationDate->isPast()) {
+                            $status = 'EXPIRED';
+                            $remainingTimeString = 'Expired ' . $remainingTime->y . ' Years, ' . $remainingTime->m . ' Months, and ' . $remainingTime->d . ' Days Ago';
+                        } elseif ($expirationDate->greaterThan($today->addMonths(3))) {
+                            $status = 'VIABLE';
+                            $remainingTimeString = 'Expires in ' . $remainingTime->y . ' Years, ' . $remainingTime->m . ' Months, and ' . $remainingTime->d . ' Days';
+                        } else {
+                            $status = 'EXPIRING';
+                            $remainingTimeString = 'Expiring in ' . $remainingTime->m . ' Months and ' . $remainingTime->d . ' Days';
+                        }
+                    }
+
+                    return [
+                        'purchase_order_item_id' => $firstStock->purchase_order_item_id,
+                        'serial_number' => $firstStock->serial_number,
+                        'lot_number' => $firstStock->lot_number,
+                        'expiration_date' => $firstStock->expiration_date,
+                        'product_id' => $firstStock->product_id,
+                        'quantity' => $stocks->sum('quantity'),
+                        'status' => $status,
+                        'remaining_time' => $remainingTimeString // Now included for VIABLE & EXPIRING stocks
                     ];
-    
-                    // **Group inventory items by purchase order number (`ponumber`)**
-                    $inventoryItems = $product->incomingStocks->groupBy(function ($stock) {
-                        return $stock->purchaseOrderItem->purchaseOrder->ponumber;
-                    })->map(function ($groupedStocks, $ponumber) use ($profitMargin, $isEquipment) {
-                        // Retrieve supplier details directly from purchase_orders table
-                        $purchaseOrder = PurchaseOrder::where('ponumber', $ponumber)->first();
-                        $supplierName = $purchaseOrder?->supplier->name ?? 'Unknown';
-    
-                        // Retrieve the supplier price from purchase order items
-                        $supplierPrice = PurchaseOrderItem::where('purchase_order_id', $purchaseOrder?->id)->value('unit_price') ?? 0;
-    
-                        // Calculate selling price using the profit margin from the product level
-                        $sellingPrice = $supplierPrice + ($supplierPrice * $profitMargin / 100);
-    
-                        return [
-                            'supplier' => $supplierName,
-                            'supplier_price' => round($supplierPrice, 2),
-                            'profit_margin' => round($profitMargin, 2) . '%',
-                            'selling_price' => round($sellingPrice, 2),
-                            'items' => $groupedStocks->groupBy(function ($stock) use ($isEquipment) {
-                                return $isEquipment 
-                                    ? $stock->serial_number // Equipment grouped by serial number 
-                                    : "{$stock->lot_number}-{$stock->expiration_date}";
-                            })->map(function ($stocks) use ($isEquipment) {
-                                return $isEquipment 
-                                    ? [
-                                        'serial_number' => $stocks->first()->serial_number,
-                                        'total_quantity' => $stocks->sum('quantity')
-                                    ]
-                                    : [
-                                        'lot_number' => $stocks->first()->lot_number,
-                                        'expiration_date' => $stocks->first()->expiration_date,
-                                        'total_quantity' => $stocks->sum('quantity'),
-                                        'status' => Carbon::parse($stocks->first()->expiration_date)->isPast() ? 'expired' :
-                                            (now()->diffInMonths(Carbon::parse($stocks->first()->expiration_date)) < 1 ? 'expiring' : 'viable')
-                                    ];
-                            })->values()
-                        ];
-                    });
-    
-                    $productData['inventory_items'] = $inventoryItems;
-    
-                    return $productData;
-                });
-    
-                return [
-                    'group_id' => $productGroup->id,
-                    'group_name' => $productGroup->name,
-                    'products' => $products
-                ];
-            });
-    
-            return [
-                'type_id' => $productType->id,
-                'type_name' => $productType->name,
-                'product_groups' => $productGroups
-            ];
-        });
-    
-        return response()->json($productTypes);
-    }
+                })
+                ->values();
+        } else {
+            $groupedStocks = collect();
+        }
+
+        return array_merge($product->toArray(), [
+            'available_quantity' => $availableQuantity,
+            'quantity_level' => $availableQuantity < $product->minimum_quantity ? 'Below Minimum' : 'Above Minimum',
+            'default_selling_price' => $product->supplier_price + ($product->supplier_price * ($product->profit_margin / 100)),
+            'incoming_stocks' => $groupedStocks->toArray()
+        ]);
+    });
+
+    return response()->json($products);
+}
+  
+
     /**
      * Display a listing of the products.
      *

@@ -17,6 +17,7 @@ use App\Models\RoleUser;
 use App\Models\Supplier;
 use App\Models\OrderItem;
 use App\Models\Warehouse;
+use App\Models\ProductTag;
 use App\Models\ProductType;
 use App\Models\ProductUnit;
 use Illuminate\Support\Str;
@@ -166,6 +167,8 @@ class DatabaseSeeder extends Seeder
 
 
 
+
+
         // Seed locations
         Location::create(['id' => 1, 'name' => 'Main Warehouse', 'description' => 'Primary storage location', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]);
         Location::create(['id' => 2, 'name' => 'Secondary Warehouse', 'description' => 'Secondary storage location', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]);
@@ -185,14 +188,123 @@ class DatabaseSeeder extends Seeder
         Company::create(['id' => 1, 'name' => 'Company 1', 'contact_info' => 'Contact info for company 1', 'website_url' => 'https://company1.com', 'industry' => 'Industry 1', 'address' => '123 Company St.', 'city' => 'City 1', 'country' => 'Country 1', 'zip_code' => '12345', 'phone_number' => '123-456-7890', 'email_address' => 'contact@company1.com', 'primary_contact_name' => 'John Smith', 'primary_contact_phone' => '123-456-7890', 'primary_contact_email' => 'john.smith@company1.com', 'additional_info' => '{}', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]);
         Company::create(['id' => 2, 'name' => 'Company 2', 'contact_info' => 'Contact info for company 2', 'website_url' => 'https://company2.com', 'industry' => 'Industry 2', 'address' => '456 Company Ave.', 'city' => 'City 2', 'country' => 'Country 2', 'zip_code' => '67890', 'phone_number' => '987-654-3210', 'email_address' => 'contact@company2.com', 'primary_contact_name' => 'Jane Doe', 'primary_contact_phone' => '987-654-3210', 'primary_contact_email' => 'jane.doe@company2.com', 'additional_info' => '{}', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]);
 
-            /*
+
+            $products = [
+                [
+                    'name' => ' Detergent A URIT D11  (5L)',
+                    'sku' => strtoupper(substr(' Detergent A URIT D11  (5L)', 0, 4)) . strtoupper(Str::random(4)),
+                    'model' => 'US-500',
+                    'description' => 'High-quality chemical reagent for laboratory testing.',
+                    'product_unit_id' => 10,
+                    'minimum_quantity' => 10,
+                    'profit_margin' => 2,
+                    'image_url' => 'products/reagent_a.png',
+                    'supplier_id' => 1,
+                    'supplier_price' => 500.00,
+                    'location_id' => 1,
+                    'warehouse_id' => 1,
+                    'status_id' => 1,
+                    'created_by' => 1,
+                    'updated_by' => 1
+                ],
+                [
+                    'name' => 'Alkaline Detergent DC-1',
+                    'sku' => strtoupper(substr('Alkaline Detergent DC-1', 0, 4)) . strtoupper(Str::random(4)),
+                    'model' => 'URIT-8210',
+                    'description' => 'High-quality chemical reagent for laboratory testing.',
+                    'product_unit_id' => 10,
+                    'minimum_quantity' => 10,
+                    'profit_margin' => 2,
+                    'image_url' => 'products/reagent_a.png',
+                    'supplier_id' => 1,
+                    'supplier_price' => 500.00,
+                    'location_id' => 1,
+                    'warehouse_id' => 1,
+                    'status_id' => 1,
+                    'created_by' => 1,
+                    'updated_by' => 1
+                ],
+                [
+                    'name' => 'Control Solution C',
+                    'sku' => strtoupper(substr('Control Solution C', 0, 4)) . strtoupper(Str::random(4)),
+                    'model' => 'CS-CX',
+                    'description' => 'Solution used for maintaining equipment accuracy.',
+                    'product_unit_id' => 10,
+                    'minimum_quantity' => 10,
+                    'profit_margin' => 2,
+                    'image_url' => 'products/reagent_a.png',
+                    'supplier_id' => 1,
+                    'supplier_price' => 500.00,
+                    'location_id' => 1,
+                    'warehouse_id' => 1,
+                    'status_id' => 1,
+                    'created_by' => 1,
+                    'updated_by' => 1
+                ],
+                [
+                    'name' => 'Industrial Machine X',
+                    'sku' => strtoupper(substr('Industrial Machine X', 0, 4)) . strtoupper(Str::random(4)),
+                    'model' => 'IM-X500',
+                    'description' => 'Heavy-duty industrial machine for automated processes.',
+                    'product_unit_id' => 10,
+                    'minimum_quantity' => 10,
+                    'profit_margin' => 2,
+                    'image_url' => 'products/reagent_a.png',
+                    'supplier_id' => 1,
+                    'supplier_price' => 500.00,
+                    'location_id' => 1,
+                    'warehouse_id' => 1,
+                    'status_id' => 1,
+                    'created_by' => 1,
+                    'updated_by' => 1
+                ],
+                [
+                    'name' => 'Machine Parts Set Y',
+                    'sku' => strtoupper(substr('Machine Parts Set Y', 0, 4)) . strtoupper(Str::random(4)),
+                    'model' => 'MP-Y234',
+                    'description' => 'Essential parts set for maintenance.',
+                    'product_unit_id' => 10,
+                    'minimum_quantity' => 10,
+                    'profit_margin' => 2,
+                    'image_url' => 'products/reagent_a.png',
+                    'supplier_id' => 1,
+                    'supplier_price' => 500.00,
+                    'location_id' => 1,
+                    'warehouse_id' => 1,
+                    'status_id' => 1,
+                    'created_by' => 1,
+                    'updated_by' => 1
+                ],
+            ];
+    
+            foreach ($products as $product) {
+                Product::create($product);
+            }
+
+            
+        $productTags = [
+            ['product_id' => 1 , 'tag_id' => 1],
+            ['product_id' => 2 , 'tag_id' => 1],
+            ['product_id' => 3 , 'tag_id' => 2],
+            ['product_id' => 4 , 'tag_id' => 3],
+            ['product_id' => 5 , 'tag_id' => 4]
+        ];
+
+        foreach ($productTags as $productTag) {
+            ProductTag::create($productTag);
+        }
+    
+
+
+
+            
 
         // Seed purchase orders (continued)
         PurchaseOrder::create([
             'id' => 1,
             'supplier_id' => 1,
             'order_date' => '2025-03-10',
-            'total_amount' => 100.00,
+            'total_amount' => 1000.00,
             'status_id' => 1,
             'created_by' => 1,
             'updated_by' => 1,
@@ -204,7 +316,7 @@ class DatabaseSeeder extends Seeder
             'id' => 2,
             'supplier_id' => 2,
             'order_date' => '2025-03-11',
-            'total_amount' => 200.00,
+            'total_amount' => 1000.00,
             'status_id' => 1,
             'created_by' => 1,
             'updated_by' => 1,
@@ -242,9 +354,9 @@ class DatabaseSeeder extends Seeder
             'id' => 1,
             'purchase_order_id' => 1,
             'product_id' => 1,
-            'quantity' => 10,
-            'unit_price' => 10.00,
-            'total_price' => 100.00,
+            'quantity' => 2,
+            'unit_price' => 500.00,
+            'total_price' => 1000.00,
             'created_by' => 1,
             'updated_by' => 1,
             'created_at' => now(),
@@ -255,15 +367,15 @@ class DatabaseSeeder extends Seeder
             'id' => 2,
             'purchase_order_id' => 2,
             'product_id' => 2,
-            'quantity' => 5,
-            'unit_price' => 20.00,
-            'total_price' => 100.00,
+            'quantity' => 2,
+            'unit_price' => 500.00,
+            'total_price' => 1000.00,
             'created_by' => 1,
             'updated_by' => 1,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
-        */
+        
 
       /*
         // Seed orders
