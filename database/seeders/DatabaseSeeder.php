@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Tag;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Order;
@@ -151,15 +152,16 @@ class DatabaseSeeder extends Seeder
             ProductUnit::create($unit);
         }
 
-        $categories = [
-            ['name' => 'REAGENT', 'description' => 'Laboratory chemicals and reagents used for testing and analysis.'],
-            ['name' => 'CALIBRATOR', 'description' => 'Used for calibrating equipment and ensuring accuracy.'],
-            ['name' => 'CONTROL', 'description' => 'Reference materials used for quality control.'],
-            ['name' => 'PARTS/CONS', 'description' => 'Parts and consumables used for equipment and general operations.'],
+        $tags = [
+            ['name' => 'REAGENT'],
+            ['name' => 'CALIBRATOR'],
+            ['name' => 'CONTROL'],
+            ['name' => 'MACHINE'],
+            ['name' => 'PARTS/CONS'],
         ];
 
-        foreach ($categories as $category) {
-            ProductCategory::create($category);
+        foreach ($tags as $tag) {
+            Tag::create($tag);
         }
 
 
@@ -172,214 +174,18 @@ class DatabaseSeeder extends Seeder
         Warehouse::create(['id' => 1, 'name' => 'Warehouse A', 'address' => '123 Warehouse St.', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]);
         Warehouse::create(['id' => 2, 'name' => 'Warehouse B', 'address' => '456 Warehouse Ave.', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]);
 
-       //Product type
-        $consumableType = ProductType::create(['name' => 'consumable']);
-        $equipmentType = ProductType::create(['name' => 'equipment']);
-
-        //Product Group
-        $group1 = ProductGroup::create(['name' => 'medicine', 'product_type_id' => $consumableType->id]);
-        $group2 = ProductGroup::create(['name' => 'radiology', 'product_type_id' => $equipmentType->id]);
-        $group3 = ProductGroup::create(['name' => 'cardiology', 'product_type_id' => $equipmentType->id]);
-        $group4 = ProductGroup::create(['name' => 'laboratory', 'product_type_id' => $equipmentType->id]);
-        $group5 = ProductGroup::create(['name' => 'orericu', 'product_type_id' => $equipmentType->id]);
-        $group6 = ProductGroup::create(['name' => 'ob-gyne', 'product_type_id' => $equipmentType->id]);
-        $group7 = ProductGroup::create(['name' => 'hospital furniture', 'product_type_id' => $equipmentType->id]);
-
-        $products = [
-            [
-                'name' => ' Detergent A URIT D11  (5L)',
-                'product_group_id' => $group1->id,
-                'product_category_id' => 1, // Example category ID
-                'product_unit_id' => 2, // Example unit ID for 'Box'
-                'description' => 'Description of product 1',
-                'model' => 'US-500',
-                'profit_margin' => 2,
-                'minimum_quantity' => 5,
-                'created_by' => 1,
-                'updated_by' => 1,
-                'status_id' => 4,
-                'location_id' => 1,
-                'warehouse_id' => 1,
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'name' => 'Danus 30',
-                'product_group_id' => $group2->id,
-                'product_category_id' => null, // Example category ID
-                'product_unit_id' => 1, // Example unit ID for 'Piece'
-                'description' => 'Description of product 2',
-                'profit_margin' => 2,
-                'minimum_quantity' => 2,
-                'model' => 'SE-1201',
-                'created_by' => 1,
-                'updated_by' => 1,
-                'status_id' => 4,
-                'location_id' => 1,
-                'warehouse_id' => 1,
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'name' => 'Finus 45',
-                'product_group_id' => $group2->id,
-                'product_category_id' => null,
-                'product_unit_id' =>1,
-                'description' => 'Description of product 3',
-                'profit_margin' => 2,
-                'minimum_quantity' => 5,
-                'model' => 'SE-1201',
-                'created_by' => 1,
-                'updated_by' => 1,
-                'status_id' => 4,
-                'location_id' => 1,
-                'warehouse_id' => 1,
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'name' => 'Finus 50',
-                'product_group_id' => $group2->id,
-                'product_category_id' => null,
-                'product_unit_id' => 1,
-                'description' => 'Description of product 4',
-                'profit_margin' => 2,
-                'minimum_quantity' => 2,
-                'model' => 'SE-1201',
-                'created_by' => 1,
-                'updated_by' => 1,
-                'status_id' => 4,
-                'location_id' => 1,
-                'warehouse_id' => 1,
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'name' => 'Flat Panel Detector',
-                'product_group_id' => $group2->id,
-                'product_category_id' => null,
-                'product_unit_id' => 1,
-                'description' => 'Description of product 6',
-                'profit_margin' => 2,
-                'minimum_quantity' => 1,
-                'model' => 'SE-1201',
-                'created_by' => 1,
-                'updated_by' => 1,
-                'status_id' => 4,
-                'location_id' => 1,
-                'warehouse_id' => 1,
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'name' => 'Sheat URIT 5S-11 (20L)',
-                'product_group_id' => $group1->id,
-                'product_category_id' => 1,
-                'product_unit_id' => 4,
-                'description' => 'Description of product 7',
-                'profit_margin' => 2,
-                'minimum_quantity' => 5,
-                'model' => 'URIT-5160',
-                'created_by' => 1,
-                'updated_by' => 1,
-                'status_id' => 4,
-                'location_id' => 1,
-                'warehouse_id' => 1,
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            // Add more products here...
-        ];
-        
-        foreach ($products as $productData) {
-            Product::create($productData);
-        }
-
+       
+      
         // Seed suppliers
-        Supplier::create(['id' => 1, 'name' => 'Supplier 1', 'contact_info' => 'Contact info for supplier 1', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]);
-        Supplier::create(['id' => 2, 'name' => 'Supplier 2', 'contact_info' => 'Contact info for supplier 2', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]);
-
-
-
-
-        $supplierProduct = [
-            [
-                'supplier_id' => 1,
-                'product_id' => 1, // Biogesic
-                'price' => 90.00,  // Price from Supplier 1
-                'created_by' => 1,
-                'updated_by' => 1,
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'supplier_id' => 1,
-                'product_id' => 2, // Danus 30
-                'price' => 1110000.00,
-                'created_by' => 1,
-                'updated_by' => 1,
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'supplier_id' => 2,
-                'product_id' => 2, // Danus 30
-                'price' => 999999.00,
-                'created_by' => 1,
-                'updated_by' => 1,
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'supplier_id' => 1,
-                'product_id' => 3, // Finus 45
-                'price' => 2220000.00,
-                'created_by' => 1,
-                'updated_by' => 1,
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'supplier_id' => 1,
-                'product_id' => 4, // Finus 50
-                'price' => 333000.00,
-                'created_by' => 1,
-                'updated_by' => 1,
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'supplier_id' => 1,
-                'product_id' => 5, // Finus 70
-                'price' => 444000.00,
-                'created_by' => 1,
-                'updated_by' => 1,
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'supplier_id' => 1,
-                'product_id' => 6, // Flat Panel Detector
-                'price' => 55000.00,
-                'created_by' => 1,
-                'updated_by' => 1,
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            // Add more supplier product prices here...
-        ];
-
-        foreach ($supplierProduct as $priceData) {
-            SupplierProduct::create($priceData);
-        }
-
-
-
+        Supplier::create(['id' => 1, 'name' => 'URIT', 'contact_info' => 'URIT', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]);
+        Supplier::create(['id' => 2, 'name' => 'BIOBASE', 'contact_info' => 'BIOBASE', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]);
 
 
         // Seed companies
         Company::create(['id' => 1, 'name' => 'Company 1', 'contact_info' => 'Contact info for company 1', 'website_url' => 'https://company1.com', 'industry' => 'Industry 1', 'address' => '123 Company St.', 'city' => 'City 1', 'country' => 'Country 1', 'zip_code' => '12345', 'phone_number' => '123-456-7890', 'email_address' => 'contact@company1.com', 'primary_contact_name' => 'John Smith', 'primary_contact_phone' => '123-456-7890', 'primary_contact_email' => 'john.smith@company1.com', 'additional_info' => '{}', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]);
         Company::create(['id' => 2, 'name' => 'Company 2', 'contact_info' => 'Contact info for company 2', 'website_url' => 'https://company2.com', 'industry' => 'Industry 2', 'address' => '456 Company Ave.', 'city' => 'City 2', 'country' => 'Country 2', 'zip_code' => '67890', 'phone_number' => '987-654-3210', 'email_address' => 'contact@company2.com', 'primary_contact_name' => 'Jane Doe', 'primary_contact_phone' => '987-654-3210', 'primary_contact_email' => 'jane.doe@company2.com', 'additional_info' => '{}', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]);
+
+            /*
 
         // Seed purchase orders (continued)
         PurchaseOrder::create([
@@ -457,63 +263,9 @@ class DatabaseSeeder extends Seeder
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+        */
 
-        // Seed inventory_consumables
-        /*InventoryConsumable::create([
-            'id' => 1,
-            'product_id' => 1,
-            'purchase_order_item_id' => 1,
-            'batch_number' => 'Batch001',
-            'expiry_date' => '2025-12-31',
-            'quantity' => 10,
-            'created_by' => 1,
-            'updated_by' => 1,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        InventoryConsumable::create([
-            'id' => 2,
-            'product_id' => 7,
-            'purchase_order_item_id' => 2,
-            'batch_number' => 'Batch002',
-            'expiry_date' => '2026-01-31',
-            'quantity' => 5,
-            'created_by' => 1,
-            'updated_by' => 1,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        // Seed inventory_equipment
-        InventoryEquipment::create([
-            'id' => 1,
-            'product_id' => 2,
-            'purchase_order_item_id' => 1,
-            'serial_number' => 'SN001',
-            'model_number' => 'MN001',
-            'purchase_date' => '2025-03-10',
-            'status_id' => 1,
-            'created_by' => 1,
-            'updated_by' => 1,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        InventoryEquipment::create([
-            'id' => 2,
-            'product_id' => 2,
-            'purchase_order_item_id' => 2,
-            'serial_number' => 'SN002',
-            'model_number' => 'MN002',
-            'purchase_date' => '2025-03-11',
-            'status_id' => 1,
-            'created_by' => 1,
-            'updated_by' => 1,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);*/
-
+      /*
         // Seed orders
         Order::create([
             'id' => 1,
