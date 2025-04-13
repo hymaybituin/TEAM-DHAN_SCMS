@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('model')->nullable(); // Model column
             $table->text('description')->nullable();
             $table->text('additional_attribute')->nullable();
-            $table->foreignId('product_unit_id')->constrained('product_units'); // Foreign key to product_units
+            $table->foreignId('product_unit_id')->constrained('product_units');
             $table->integer('minimum_quantity');
             $table->decimal('profit_margin', 5, 2);
             $table->string('image_url')->nullable();
