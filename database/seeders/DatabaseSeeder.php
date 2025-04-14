@@ -18,6 +18,7 @@ use App\Models\Supplier;
 use App\Models\OrderItem;
 use App\Models\Warehouse;
 use App\Models\ProductTag;
+use App\Models\CompanyUser;
 use App\Models\ProductType;
 use App\Models\ProductUnit;
 use Illuminate\Support\Str;
@@ -50,8 +51,8 @@ class DatabaseSeeder extends Seeder
         User::create([
             'id' => 1,
             'username' => 'admin',
-            'password' => Hash::make('hashedpassword1'),
-            'email' => 'admin@example.com',
+            'password' => Hash::make('123'),
+            'email' => 'admin@admin.com',
             'full_name' => 'Admin User',
             'created_at' => now(),
             'updated_at' => now(),
@@ -76,6 +77,11 @@ class DatabaseSeeder extends Seeder
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+
+        
+       
+        
+
 
         DB::table('roles')->insert([
             ['id' => 1, 'name' => 'Admin', 'description' => 'Administrator with full access to the system', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
@@ -189,6 +195,10 @@ class DatabaseSeeder extends Seeder
         Company::create(['id' => 1, 'name' => 'Company 1', 'contact_info' => 'Contact info for company 1', 'website_url' => 'https://company1.com', 'industry' => 'Industry 1', 'address' => '123 Company St.', 'city' => 'City 1', 'country' => 'Country 1', 'zip_code' => '12345', 'phone_number' => '123-456-7890', 'email_address' => 'contact@company1.com', 'primary_contact_name' => 'John Smith', 'primary_contact_phone' => '123-456-7890', 'primary_contact_email' => 'john.smith@company1.com', 'additional_info' => '{}', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]);
         Company::create(['id' => 2, 'name' => 'Company 2', 'contact_info' => 'Contact info for company 2', 'website_url' => 'https://company2.com', 'industry' => 'Industry 2', 'address' => '456 Company Ave.', 'city' => 'City 2', 'country' => 'Country 2', 'zip_code' => '67890', 'phone_number' => '987-654-3210', 'email_address' => 'contact@company2.com', 'primary_contact_name' => 'Jane Doe', 'primary_contact_phone' => '987-654-3210', 'primary_contact_email' => 'jane.doe@company2.com', 'additional_info' => '{}', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]);
 
+            CompanyUser::create([
+                'company_id' => 1,
+                'user_id' =>1,
+            ]);
 
             $products = [
                 [
@@ -431,12 +441,6 @@ class DatabaseSeeder extends Seeder
             'updated_at' => now(),
         ]);
 
-
-        CompanyUser::create([
-            'company_id' => 1,
-            'user_id' =>1,
-        ]);
-        
 
       /*
         // Seed orders

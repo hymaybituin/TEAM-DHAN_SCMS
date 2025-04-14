@@ -12,7 +12,9 @@ class VerifyCsrfToken extends Middleware
      * @var array
      */
     protected $except = [
-        '*',
-        // Add other URIs as needed
+        'api/*', // Disables CSRF protection for API calls
+        'sanctum/csrf-cookie', // Allows Laravel to process authentication without CSRF validation
     ];
+    
+    
 }
