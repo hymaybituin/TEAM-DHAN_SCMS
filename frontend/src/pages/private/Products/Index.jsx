@@ -6,7 +6,6 @@ import {
   Button,
   Drawer,
   Table,
-  Modal,
   Dropdown,
   Tag,
   Typography,
@@ -19,10 +18,7 @@ import {
 import {
   MoreOutlined,
   ArrowDownOutlined,
-  ExclamationOutlined,
   EnvironmentOutlined,
-  EnvironmentTwoTone,
-  ExclamationCircleOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -71,7 +67,8 @@ function Products() {
     return <ErrorContent errorMessage={errorMsg} />;
   }
 
-  const toggleFormCreateProductOpen = () => {
+  const toggleProductInventoryModelOpen = () => {
+    setIsProductInventoryModalOpen(!isProductInventoryModalOpen);
     // setIsFormCreateProductOpen(!isFormCreateProductOpen);
   };
 
@@ -80,7 +77,7 @@ function Products() {
       title: "",
       dataIndex: "image_url",
       render: (text) => {
-        return <Image width={50} src={"https://placehold.co/48x48"} />;
+        return <Image width={50} src={"https://placehold.co/50x50"} />;
       },
       width: 100,
     },
@@ -100,19 +97,36 @@ function Products() {
                 {record.location.name}
               </Text>
             </div>
-
-            <div style={{ marginTop: 5 }}>
-              {record.tags.length !== 0 && (
-                <Space>
-                  {record.tags.map((tag) => (
-                    <Tag key={tag.id}>{tag.name}</Tag>
-                  ))}
-                </Space>
-              )}
-            </div>
           </>
         );
       },
+    },
+    {
+      title: "Tags",
+      render: (_, record) => {
+        return record.tags.length !== 0 ? (
+          <Space>
+            {record.tags.map((tag) => (
+              <Tag key={tag.id}>{tag.name}</Tag>
+            ))}
+          </Space>
+        ) : (
+          "-"
+        );
+      },
+      filters: [
+        {
+          text: "CONTROL",
+          value: "CONTROL",
+        },
+      ],
+      onFilter: (value, record) =>
+        record.tags
+          .map((tag) => tag.name)
+          .join(",")
+          .includes(value),
+      filterSearch: true,
+      width: 300,
     },
     {
       title: "Available Qty.",
@@ -120,7 +134,10 @@ function Products() {
       width: 150,
       render: (text, record) => {
         const { quantity_level, minimum_quantity } = record;
-        if (quantity_level === "Below Minimum" || "No Stock") {
+        if (
+          quantity_level === "Below Minimum" ||
+          quantity_level === "No Stock"
+        ) {
           return (
             <Popover
               content={<>Minimum Quantity: {minimum_quantity}</>}
@@ -327,116 +344,132 @@ function Products() {
   });
 
   return (
-    <Spin spinning={isContentLoading} tip="loading ...">
-      <Row type="flex" justify="space-between" style={{ marginBottom: 16 }}>
-        <Col>
-          <Segmented
-            options={["Consumables", "Machine"]}
-            onChange={(value) => {
-              setSelectedProductType(value); // string
-            }}
-          />
-        </Col>
-        <Col>
-          <Button type="primary" onClick={toggleFormCreateProductOpen}>
-            Create Product
-          </Button>
-        </Col>
-      </Row>
-      <Table
-        rowKey="id"
-        columns={tableColumns}
-        dataSource={filteredProducts}
-        expandable={{
-          expandedRowRender: (record) => {
-            const columns = [
-              {
-                title: "Field",
-                dataIndex: "field",
-                key: "field",
-                width: 200,
-              },
-              {
-                title: "Value",
-                dataIndex: "value",
-                key: "value",
-              },
-            ];
+    <>
+      <Spin spinning={isContentLoading} tip="loading ...">
+        <Row type="flex" justify="space-between" style={{ marginBottom: 16 }}>
+          <Col>
+            <Segmented
+              options={["Consumables", "Machine"]}
+              onChange={(value) => {
+                setSelectedProductType(value); // string
+              }}
+            />
+          </Col>
+          <Col>
+            <Button type="primary" onClick={toggleProductInventoryModelOpen}>
+              Create Product
+            </Button>
+          </Col>
+        </Row>
+        <Table
+          rowKey="id"
+          columns={tableColumns}
+          dataSource={filteredProducts}
+          expandable={{
+            expandedRowRender: (record) => {
+              const columns = [
+                {
+                  title: "Field",
+                  dataIndex: "field",
+                  key: "field",
+                  width: 200,
+                },
+                {
+                  title: "Value",
+                  dataIndex: "value",
+                  key: "value",
+                },
+              ];
 
-            let tableData = [
-              { field: "Product Name", value: record.name },
-              { field: "SKU", value: record.sku },
-              { field: "Model", value: record.model },
-              { field: "Description", value: record.description },
-              { field: "Unit", value: record.product_unit.name },
-              {
-                field: "Available Quantity",
-                value: record.available_quantity,
-              },
-              {
-                field: "Minimum Quantity",
-                value: record.minimum_quantity,
-              },
-              {
-                field: "Quantity Level",
-                value: record.quantity_level,
-              },
-              { field: "Supplier Name", value: record.supplier.name },
-              {
-                field: "Supplier Price",
-                value: `₱${record.supplier_price}`,
-              },
-              {
-                field: "Profit Margin (%)",
-                value: record.profit_margin,
-              },
-              {
-                field: "Default Selling Price",
-                value: `₱${record.default_selling_price}`,
-              },
-              { field: "Location", value: record.location.name },
-              { field: "Warehouse", value: record.warehouse.name },
+              let tableData = [
+                { field: "Product Name", value: record.name },
+                { field: "SKU", value: record.sku },
+                { field: "Model", value: record.model },
+                { field: "Description", value: record.description },
+                { field: "Unit", value: record.product_unit.name },
+                {
+                  field: "Available Quantity",
+                  value: record.available_quantity,
+                },
+                {
+                  field: "Minimum Quantity",
+                  value: record.minimum_quantity,
+                },
+                {
+                  field: "Quantity Level",
+                  value: record.quantity_level,
+                },
+                { field: "Supplier Name", value: record.supplier.name },
+                {
+                  field: "Supplier Price",
+                  value: `₱${record.supplier_price}`,
+                },
+                {
+                  field: "Profit Margin (%)",
+                  value: record.profit_margin,
+                },
+                {
+                  field: "Default Selling Price",
+                  value: `₱${record.default_selling_price}`,
+                },
+                { field: "Location", value: record.location.name },
+                { field: "Warehouse", value: record.warehouse.name },
 
-              {
-                field: "Tags",
-                value: record.tags.map((tag) => tag.name).join(", "),
-              },
-              { field: "Status", value: record.status.name },
-              {
-                field: "Created At",
-                value: dayjs(record.created_at).format("MMMM, DD YYYY HH:mm A"),
-              },
-              { field: "Created By", value: record.creator.full_name },
-              {
-                field: "Updated At",
-                value: dayjs(record.updated_at).format("MMMM, DD YYYY HH:mm A"),
-              },
-              { field: "Updated By", value: record.updater.full_name },
-              // {
-              //   key: '16',
-              //   field: 'Incoming Stock',
-              //   value: record.incoming_stocks
-              //     .map(stock => `Lot: ${stock.lot_number}, Qty: ${stock.quantity}, Status: ${stock.status}`)
-              //     .join('; '),
-              // },
-            ];
+                {
+                  field: "Tags",
+                  value: record.tags.map((tag) => tag.name).join(", "),
+                },
+                { field: "Status", value: record.status.name },
+                {
+                  field: "Created At",
+                  value: dayjs(record.created_at).format(
+                    "MMMM, DD YYYY HH:mm A"
+                  ),
+                },
+                { field: "Created By", value: record.creator.full_name },
+                {
+                  field: "Updated At",
+                  value: dayjs(record.updated_at).format(
+                    "MMMM, DD YYYY HH:mm A"
+                  ),
+                },
+                { field: "Updated By", value: record.updater.full_name },
+                // {
+                //   key: '16',
+                //   field: 'Incoming Stock',
+                //   value: record.incoming_stocks
+                //     .map(stock => `Lot: ${stock.lot_number}, Qty: ${stock.quantity}, Status: ${stock.status}`)
+                //     .join('; '),
+                // },
+              ];
 
-            tableData = tableData.map((i, index) => ({ ...i, key: index }));
+              tableData = tableData.map((i, index) => ({ ...i, key: index }));
 
-            return (
-              <Card>
-                <Table
-                  columns={columns}
-                  dataSource={tableData}
-                  pagination={false} // To display all data without pagination
-                  rowKey="key"
-                />
-              </Card>
-            );
-          },
-        }}
-      />
-    </Spin>
+              return (
+                <Card>
+                  <Table
+                    columns={columns}
+                    dataSource={tableData}
+                    pagination={false} // To display all data without pagination
+                    rowKey="key"
+                  />
+                </Card>
+              );
+            },
+          }}
+        />
+      </Spin>
+
+      <Drawer
+        title="Product Inventory"
+        open={isProductInventoryModalOpen}
+        destroyOnClose
+        width={960}
+        onClose={toggleProductInventoryModelOpen}
+      >
+        gg
+      </Drawer>
+    </>
   );
 }
 

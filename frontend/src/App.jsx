@@ -12,6 +12,7 @@ import PageTitleProvider from "./components/common/PageTitleProvider";
 
 import Dashboard from "./pages/private/Dashboard/Index";
 import Products from "./pages/private/Products/Index";
+import ProductInventory from "./pages/private/ProductInventory/Index";
 
 import ViewProductItem from "./pages/private/Products/components/ViewProductItem/Index.jsx";
 import PurchaseOrders from "./pages/private/PurchaseOrders/Index.jsx";
@@ -42,6 +43,12 @@ function App() {
       subTitle: "product management",
       path: "/products",
       element: <Products />,
+    },
+    {
+      title: "Product Inventory",
+      subTitle: "view your selected product inventory details",
+      path: "/products/:productId",
+      element: <ProductInventory />,
     },
     // {
     //   title: "My Orders",

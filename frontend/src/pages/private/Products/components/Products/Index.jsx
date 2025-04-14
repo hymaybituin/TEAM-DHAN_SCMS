@@ -132,7 +132,7 @@ function Products() {
   const tableColumns = [
     {
       title: "",
-      dataIndex: "image_url",
+      dataIndex: "img_url",
       render: (text) => {
         return <Image width={50} src={text} />;
       },
@@ -157,95 +157,95 @@ function Products() {
         );
       },
     },
-    // {
-    //   title: "Remarks",
-    //   dataIndex: "remarks",
-    //   width: 150,
-    //   filters: [
-    //     {
-    //       text: "No Stock",
-    //       value: "No Stock",
-    //     },
-    //     {
-    //       text: "Low Stock",
-    //       value: "Low Stock",
-    //     },
-    //   ],
-    //   onFilter: (value, record) => record.remarks === value,
-    //   render: (text) => (text ? <Tag color="#f50">{text}</Tag> : "-"),
-    // },
-    // {
-    //   title: "Available Qty.",
-    //   dataIndex: "available_qty",
-    //   width: 150,
-    // },
-    // {
-    //   title: "Minimum Qty.",
-    //   dataIndex: "minimum_qty",
-    //   width: 150,
-    // },
-    // {
-    //   title: "Category",
-    //   dataIndex: "product_category_id",
-    //   filters: [
-    //     {
-    //       text: "Consumable",
-    //       value: 1,
-    //     },
-    //     {
-    //       text: "Equipment",
-    //       value: 2,
-    //     },
-    //   ],
-    //   onFilter: (value, record) => record.product_category_id === value,
-    //   render: (text) => (text == 1 ? "Consumable" : "Equipment"),
-    //   width: 100,
-    // },
-    // {
-    //   title: "Price",
-    //   dataIndex: "selling_price",
-    //   width: 100,
-    // },
-    // {
-    //   title: "Action",
-    //   width: 50,
-    //   render: (_, record) => {
-    //     const menuItems = [
-    //       { key: "Update", label: "Update" },
-    //       {
-    //         type: "divider",
-    //       },
-    //       { key: "Delete", label: "Delete", danger: true },
-    //     ];
+    {
+      title: "Remarks",
+      dataIndex: "remarks",
+      width: 150,
+      filters: [
+        {
+          text: "No Stock",
+          value: "No Stock",
+        },
+        {
+          text: "Low Stock",
+          value: "Low Stock",
+        },
+      ],
+      onFilter: (value, record) => record.remarks === value,
+      render: (text) => (text ? <Tag color="#f50">{text}</Tag> : "-"),
+    },
+    {
+      title: "Available Qty.",
+      dataIndex: "available_qty",
+      width: 150,
+    },
+    {
+      title: "Minimum Qty.",
+      dataIndex: "minimum_qty",
+      width: 150,
+    },
+    {
+      title: "Category",
+      dataIndex: "product_category_id",
+      filters: [
+        {
+          text: "Consumable",
+          value: 1,
+        },
+        {
+          text: "Equipment",
+          value: 2,
+        },
+      ],
+      onFilter: (value, record) => record.product_category_id === value,
+      render: (text) => (text == 1 ? "Consumable" : "Equipment"),
+      width: 100,
+    },
+    {
+      title: "Price",
+      dataIndex: "selling_price",
+      width: 100,
+    },
+    {
+      title: "Action",
+      width: 50,
+      render: (_, record) => {
+        const menuItems = [
+          { key: "Update", label: "Update" },
+          {
+            type: "divider",
+          },
+          { key: "Delete", label: "Delete", danger: true },
+        ];
 
-    //     const handleMenuClick = ({ key }) => {
-    //       if (key === "Update") {
-    //         setSelectedProduct(record);
-    //         toggleFormUpdateProductOpen();
-    //       } else if (key === "Delete") {
-    //         Modal.confirm({
-    //           title: "Delete Product",
-    //           content: "Are you sure you want to delete this product?",
-    //           onOk: async () => {
-    //             handleDeleteProduct(record);
-    //           },
-    //         });
-    //       }
-    //     };
+        const handleMenuClick = ({ key }) => {
+          if (key === "Update") {
+            setSelectedProduct(record);
+            toggleFormUpdateProductOpen();
+          } else if (key === "Delete") {
+            Modal.confirm({
+              title: "Delete Product",
+              content: "Are you sure you want to delete this product?",
+              onOk: async () => {
+                handleDeleteProduct(record);
+              },
+            });
+          }
+        };
 
-    //     return (
-    //       <Dropdown
-    //         menu={{ items: menuItems, onClick: handleMenuClick }}
-    //         trigger={["click"]}
-    //         placement="bottomRight"
-    //       >
-    //         <Button shape="circle" onClick={(e) => e.stopPropagation()}>
-    //           <MoreOutlined />
-    //         </Button>
-    //       </Dropdown>
-    //     );
-    //   },
-    // },
+        return (
+          <Dropdown
+            menu={{ items: menuItems, onClick: handleMenuClick }}
+            trigger={["click"]}
+            placement="bottomRight"
+          >
+            <Button shape="circle" onClick={(e) => e.stopPropagation()}>
+              <MoreOutlined />
+            </Button>
+          </Dropdown>
+        );
+      },
+    },
   ];
 
   return (
