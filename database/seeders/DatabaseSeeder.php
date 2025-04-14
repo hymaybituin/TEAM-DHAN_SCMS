@@ -431,6 +431,11 @@ class DatabaseSeeder extends Seeder
             'updated_at' => now(),
         ]);
 
+
+        CompanyUser::create([
+            'company_id' => 1,
+            'user_id' =>1,
+        ]);
         
 
       /*
