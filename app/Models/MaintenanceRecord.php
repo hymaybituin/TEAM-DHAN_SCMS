@@ -8,7 +8,7 @@ class MaintenanceRecord extends Model
 {
     //
     protected $fillable = [
-        'inventory_equipment_id',
+        'incoming_stock_id',
         'maintenance_date',
         'description',
         'performed_by',
@@ -16,9 +16,9 @@ class MaintenanceRecord extends Model
         'updated_by',
     ];
 
-    public function inventoryEquipment()
+    public function incomingStock()
     {
-        return $this->belongsTo(InventoryEquipment::class);
+        return $this->belongsTo(IncomingStock::class);
     }
 
     public function createdBy()
@@ -30,4 +30,6 @@ class MaintenanceRecord extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+    
+    
 }

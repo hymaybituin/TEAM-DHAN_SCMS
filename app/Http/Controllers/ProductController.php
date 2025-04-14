@@ -149,85 +149,111 @@ class ProductController extends Controller
 
    
 
-    public function getAllProducts()
-    {
-        $products = Product::with([
-            'productUnit',
-            'supplier',
-            'location',
-            'warehouse',
-            'status',
-            'creator',
-            'updater',
-            'tags',
-            'incomingStocks'
-        ])
-        ->get()
-        ->map(function ($product) {
-            $availableQuantity = $product->incomingStocks
-                ->filter(fn($stock) => is_null($stock->expiration_date) || !Carbon::parse($stock->expiration_date)->isPast())
-                ->sum('quantity');
+    public function getAllProducts()  
+    {  
+        $products = Product::with([  
+            'productUnit',  
+            'supplier',  
+            'location',  
+            'warehouse',  
+            'status',  
+            'creator',  
+            'updater',  
+            'tags',  
+            'incomingStocks.calibrationRecords', // Include calibration records
+            'incomingStocks.maintenanceRecords'  // Include maintenance records
+        ])  
+        ->get()  
+        ->map(function ($product) {  
+            $availableQuantity = $product->incomingStocks  
+                ->filter(fn($stock) => is_null($stock->expiration_date) || !Carbon::parse($stock->expiration_date)->isPast())  
+                ->sum('quantity');  
     
-            if ($product->incomingStocks->isNotEmpty()) {
-                $groupedStocks = $product->incomingStocks
-                    ->groupBy(fn($stock) => implode('|', [
-                        $stock->purchase_order_item_id,
-                        $stock->serial_number ?? 'NULL',
-                        $stock->lot_number ?? 'NULL',
-                        $stock->expiration_date ?? 'NULL',
-                        $stock->product_id
-                    ]))
-                    ->map(function ($stocks) {
-                        $firstStock = $stocks->first();
-                        $remainingTimeString = null;
+            if ($product->incomingStocks->isNotEmpty()) {  
+                $groupedStocks = $product->incomingStocks  
+                    ->groupBy(fn($stock) => implode('|', [  
+                        $stock->purchase_order_item_id,  
+                        $stock->serial_number ?? 'NULL',  
+                        $stock->lot_number ?? 'NULL',  
+                        $stock->expiration_date ?? 'NULL',  
+                        $stock->product_id  
+                    ]))  
+                    ->map(function ($stocks) use ($product) {  
+                        $firstStock = $stocks->first();  
+                        $remainingTimeString = null;  
+                        $status = 'In Stock';  
+                        $quantity = 0;  
     
-                        if (is_null($firstStock->lot_number) || is_null($firstStock->expiration_date)) {
-                            $status = 'In Stock';
-                        } else {
-                            $expirationDate = Carbon::parse($firstStock->expiration_date);
-                            $today = Carbon::today();
-                            $remainingTime = $today->diff($expirationDate);
+                        if (!$product->is_machine) {  
+                            if (is_null($firstStock->lot_number) || is_null($firstStock->expiration_date)) {  
+                                $status = 'INSTOCK';  
+                                $quantity = 'N/A';  
+                            } else {  
+                                $expirationDate = Carbon::parse($firstStock->expiration_date);  
+                                $today = Carbon::today();  
+                                $remainingTime = $today->diff($expirationDate);  
     
-                            if ($expirationDate->isPast()) {
-                                $status = 'EXPIRED';
-                                $remainingTimeString = 'Expired ' . $remainingTime->y . ' Years, ' . $remainingTime->m . ' Months, and ' . $remainingTime->d . ' Days Ago';
-                            } elseif ($expirationDate->greaterThan($today->addMonths(3))) {
-                                $status = 'VIABLE';
-                                $remainingTimeString = 'Expires in ' . $remainingTime->y . ' Years, ' . $remainingTime->m . ' Months, and ' . $remainingTime->d . ' Days';
-                            } else {
-                                $status = 'EXPIRING';
-                                $remainingTimeString = 'Expiring in ' . $remainingTime->m . ' Months and ' . $remainingTime->d . ' Days';
-                            }
-                        }
+                                if ($expirationDate->isPast()) {  
+                                    $status = 'EXPIRED';  
+                                    $remainingTimeString = 'Expired ' . $remainingTime->y . ' Years, ' . $remainingTime->m . ' Months, and ' . $remainingTime->d . ' Days Ago';  
+                                } elseif ($expirationDate->greaterThan($today->addMonths(3))) {  
+                                    $status = 'VIABLE';  
+                                    $remainingTimeString = 'Expires in ' . $remainingTime->y . ' Years, ' . $remainingTime->m . ' Months, and ' . $remainingTime->d . ' Days';  
+                                } else {  
+                                    $status = 'EXPIRING';  
+                                    $remainingTimeString = 'Expiring in ' . $remainingTime->m . ' Months and ' . $remainingTime->d . ' Days';  
+                                }  
+                                $quantity = $stocks->sum('quantity');  
+                            }  
+                        }  
     
-                        return [
-                            'purchase_order_item_id' => $firstStock->purchase_order_item_id,
-                            'serial_number' => $firstStock->serial_number,
-                            'lot_number' => $firstStock->lot_number,
-                            'expiration_date' => $firstStock->expiration_date,
-                            'product_id' => $firstStock->product_id,
-                            'quantity' => $stocks->sum('quantity'),
-                            'status' => $status,
-                            'remaining_time' => $remainingTimeString,
-                            'barcodes' => $stocks->pluck('barcode')->toArray() // ✅ Adds barcode array for each incoming stock
-                        ];
-                    })
-                    ->values();
-            } else {
-                $groupedStocks = collect();
-            }
+                        // Retrieve latest calibration and maintenance records
+                        $latestCalibration = $firstStock->calibrationRecords->sortByDesc('calibration_date')->first();
+                        $latestMaintenance = $firstStock->maintenanceRecords->sortByDesc('maintenance_date')->first();
     
-            return array_merge($product->toArray(), [
-                'available_quantity' => $availableQuantity,
-                'quantity_level' => $availableQuantity == 0 
-                ? 'No Stock' 
-                : ($availableQuantity < $product->minimum_quantity ? 'Below Minimum' : 'Above Minimum'),
-                'default_selling_price' => number_format($product->supplier_price + ($product->supplier_price * ($product->profit_margin / 100)), 2, '.', ''),
-                'incoming_stocks' => $groupedStocks->toArray()
-            ]);
-        });
+                        // Determine next calibration date and whether it's due
+                        $nextCalibrationDate = $latestCalibration?->next_calibration_due;
+                        $forCalibration = $nextCalibrationDate == null && (
+                            Carbon::parse($nextCalibrationDate)->isPast() || 
+                            Carbon::parse($nextCalibrationDate)->diffInDays(Carbon::today()) <= 30
+                        );
     
-        return response()->json($products);
+                        // Determine next maintenance date and whether it's due
+                        $nextMaintenanceDate = $latestMaintenance?->next_maintenance_date;
+                        $forMaintenance = $nextMaintenanceDate && Carbon::parse($nextMaintenanceDate)->diffInDays(Carbon::today()) <= 30;
+    
+                        return [  
+                            'purchase_order_item_id' => $firstStock->purchase_order_item_id,  
+                            'serial_number' => $firstStock->serial_number,  
+                            'lot_number' => $firstStock->lot_number,  
+                            'expiration_date' => $firstStock->expiration_date,  
+                            'product_id' => $firstStock->product_id,  
+                            'quantity' => $quantity,  
+                            'status' => $status,  
+                            'remaining_time' => $remainingTimeString,  
+                            'barcodes' => $stocks->pluck('barcode')->toArray(),  
+                            'next_calibration_date' => $nextCalibrationDate,  
+                            'for_calibration' => (bool) $forCalibration,  
+                            'next_maintenance_date' => $nextMaintenanceDate,  
+                            'for_maintenance' => (bool) $forMaintenance  
+                        ];  
+                    })  
+                    ->values();  
+            } else {  
+                $groupedStocks = collect();  
+            }  
+    
+            return array_merge($product->toArray(), [  
+                'available_quantity' => $availableQuantity,  
+                'quantity_level' => $availableQuantity == 0  
+                ? 'No Stock'  
+                : ($availableQuantity < $product->minimum_quantity ? 'Below Minimum' : 'Above Minimum'),  
+                'default_selling_price' => number_format($product->supplier_price + ($product->supplier_price * ($product->profit_margin / 100)), 2, '.', ''),  
+                'incoming_stocks' => $groupedStocks->toArray()  
+            ]);  
+        });  
+    
+        return response()->json($products);  
     }
 
     /**

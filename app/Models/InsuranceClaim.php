@@ -8,7 +8,7 @@ class InsuranceClaim extends Model
 {
     //
     protected $fillable = [
-        'inventory_equipment_id',
+        'incoming_stock_id',
         'claim_date',
         'incident_description',
         'claim_amount',
@@ -22,10 +22,11 @@ class InsuranceClaim extends Model
         'updated_by',
     ];
 
-    public function inventoryEquipment()
+    public function incomingStock()
     {
-        return $this->belongsTo(InventoryEquipment::class);
+        return $this->belongsTo(IncomingStock::class);
     }
+
 
     public function claimStatus()
     {
