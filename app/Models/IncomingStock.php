@@ -39,4 +39,12 @@ class IncomingStock extends Model
     {
         return $this->belongsTo(User::class, 'updated_by_user_id');
     }
+    public function maintenanceRecords()
+    {
+        return $this->hasMany(MaintenanceRecord::class, 'incoming_stock_id');
+    }
+    public function calibrationRecords()
+    {
+        return $this->hasMany(CalibrationRecord::class, 'incoming_stock_id');
+    }
 }

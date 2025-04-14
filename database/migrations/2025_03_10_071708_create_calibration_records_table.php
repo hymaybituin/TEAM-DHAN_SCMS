@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('incoming_stock_id')->constrained('incoming_stocks');
             $table->date('calibration_date');
-            $table->date('next_calibration_due')->nullable();
+            $table->date('next_calibration_date')->nullable();
             $table->string('calibrated_by')->nullable();
             $table->foreignId('calibration_status_id')->constrained('statuses');
             $table->text('calibration_notes')->nullable();

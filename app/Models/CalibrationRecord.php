@@ -8,9 +8,9 @@ class CalibrationRecord extends Model
 {
     //
     protected $fillable = [
-        'inventory_equipment_id',
+        'incoming_stock_id',
         'calibration_date',
-        'next_calibration_due',
+        'next_calibration_date',
         'calibrated_by',
         'calibration_status_id',
         'calibration_notes',
@@ -18,9 +18,9 @@ class CalibrationRecord extends Model
         'updated_by',
     ];
 
-    public function inventoryEquipment()
+    public function incomingStock()
     {
-        return $this->belongsTo(InventoryEquipment::class);
+        return $this->belongsTo(IncomingStock::class);
     }
 
     public function calibrationStatus()
