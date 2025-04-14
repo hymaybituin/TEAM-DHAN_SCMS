@@ -9,7 +9,9 @@ class UserController extends Controller
 {
     public function index()
     {
-        return User::all();
+        $users = User::with('roles')->get();
+
+        return response()->json($users);
     }
 
     public function store(Request $request)
@@ -23,11 +25,24 @@ class UserController extends Controller
 
         return User::create($request->all());
     }
+    public function getUserData(Request $request)
+    {
+        $user = auth()->user();
+        $roles = $user->roles->pluck('name');// Assuming the Role model has a 'name' attribute
+        return response()->json([
+            'user_id' => $user->id,
+            'name' => $user->full_name,
+            'username' => $user->username,
+            'email' => $user->email,
+            'roles' => $roles
+        ]);
+    }
 
     public function show($id)
     {
-        return User::findOrFail($id);
+        return User::with('roles')->findOrFail($id);
     }
+
 
     public function update(Request $request, $id)
     {

@@ -218,7 +218,9 @@ public function getAllProducts()
 
         return array_merge($product->toArray(), [
             'available_quantity' => $availableQuantity,
-            'quantity_level' => $availableQuantity < $product->minimum_quantity ? 'Below Minimum' : 'Above Minimum',
+            'quantity_level' => $availableQuantity == 0 
+            ? 'No Stock' 
+            : ($availableQuantity < $product->minimum_quantity ? 'Below Minimum' : 'Above Minimum'),
             'default_selling_price' => $product->supplier_price + ($product->supplier_price * ($product->profit_margin / 100)),
             'incoming_stocks' => $groupedStocks->toArray()
         ]);
