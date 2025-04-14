@@ -13,8 +13,9 @@ return new class extends Migration
     {
         Schema::create('maintenance_records', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('inventory_equipment_id')->constrained('inventory_equipment');
+            $table->foreignId('incoming_stock_id')->constrained('incoming_stocks');
             $table->date('maintenance_date');
+            $table->date('next_maintenance_date');
             $table->text('description')->nullable();
             $table->string('performed_by')->nullable();
             $table->foreignId('created_by')->constrained('users');

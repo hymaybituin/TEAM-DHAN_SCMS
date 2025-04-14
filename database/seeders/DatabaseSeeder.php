@@ -294,6 +294,7 @@ class DatabaseSeeder extends Seeder
                     'product_unit_id' => 1,
                     'minimum_quantity' => 3,
                     'profit_margin' => 5,
+                    'is_machine' => 1,
                     'image_url' => 'products/reagent_a.png',
                     'supplier_id' => 1,
                     'supplier_price' => 5000000.00,
@@ -315,7 +316,8 @@ class DatabaseSeeder extends Seeder
             ['product_id' => 2 , 'tag_id' => 1],
             ['product_id' => 3 , 'tag_id' => 2],
             ['product_id' => 4 , 'tag_id' => 3],
-            ['product_id' => 5 , 'tag_id' => 4]
+            ['product_id' => 5 , 'tag_id' => 4],
+            ['product_id' => 6, 'tag_id' => 4],
         ];
 
         foreach ($productTags as $productTag) {
@@ -382,7 +384,7 @@ class DatabaseSeeder extends Seeder
             'id' => 1,
             'purchase_order_id' => 1,
             'product_id' => 1,
-            'quantity' => 2,
+            'quantity' => 10,
             'unit_price' => 500.00,
             'total_price' => 1000.00,
             'created_by' => 1,

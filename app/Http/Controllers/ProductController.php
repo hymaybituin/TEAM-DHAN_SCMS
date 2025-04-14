@@ -149,86 +149,86 @@ class ProductController extends Controller
 
    
 
-public function getAllProducts()
-{
-    $products = Product::with([
-        'productUnit',
-        'supplier',
-        'location',
-        'warehouse',
-        'status',
-        'creator',
-        'updater',
-        'tags',
-        'incomingStocks'
-    ])
-    ->get()
-    ->map(function ($product) {
-        $availableQuantity = $product->incomingStocks
-            ->filter(fn($stock) => is_null($stock->expiration_date) || !Carbon::parse($stock->expiration_date)->isPast())
-            ->sum('quantity');
-
-        if ($product->incomingStocks->isNotEmpty()) {
-            $groupedStocks = $product->incomingStocks
-                ->groupBy(fn($stock) => implode('|', [
-                    $stock->purchase_order_item_id,
-                    $stock->serial_number ?? 'NULL',
-                    $stock->lot_number ?? 'NULL',
-                    $stock->expiration_date ?? 'NULL',
-                    $stock->product_id
-                ]))
-                ->map(function ($stocks) {
-                    $firstStock = $stocks->first();
-                    $remainingTimeString = null;
-
-                    if (is_null($firstStock->lot_number) || is_null($firstStock->expiration_date)) {
-                        $status = 'INSTOCK';
-                    } else {
-                        $expirationDate = Carbon::parse($firstStock->expiration_date);
-                        $today = Carbon::today();
-                        $remainingTime = $today->diff($expirationDate);
-
-                        if ($expirationDate->isPast()) {
-                            $status = 'EXPIRED';
-                            $remainingTimeString = 'Expired ' . $remainingTime->y . ' Years, ' . $remainingTime->m . ' Months, and ' . $remainingTime->d . ' Days Ago';
-                        } elseif ($expirationDate->greaterThan($today->addMonths(3))) {
-                            $status = 'VIABLE';
-                            $remainingTimeString = 'Expires in ' . $remainingTime->y . ' Years, ' . $remainingTime->m . ' Months, and ' . $remainingTime->d . ' Days';
+    public function getAllProducts()
+    {
+        $products = Product::with([
+            'productUnit',
+            'supplier',
+            'location',
+            'warehouse',
+            'status',
+            'creator',
+            'updater',
+            'tags',
+            'incomingStocks'
+        ])
+        ->get()
+        ->map(function ($product) {
+            $availableQuantity = $product->incomingStocks
+                ->filter(fn($stock) => is_null($stock->expiration_date) || !Carbon::parse($stock->expiration_date)->isPast())
+                ->sum('quantity');
+    
+            if ($product->incomingStocks->isNotEmpty()) {
+                $groupedStocks = $product->incomingStocks
+                    ->groupBy(fn($stock) => implode('|', [
+                        $stock->purchase_order_item_id,
+                        $stock->serial_number ?? 'NULL',
+                        $stock->lot_number ?? 'NULL',
+                        $stock->expiration_date ?? 'NULL',
+                        $stock->product_id
+                    ]))
+                    ->map(function ($stocks) {
+                        $firstStock = $stocks->first();
+                        $remainingTimeString = null;
+    
+                        if (is_null($firstStock->lot_number) || is_null($firstStock->expiration_date)) {
+                            $status = 'In Stock';
                         } else {
-                            $status = 'EXPIRING';
-                            $remainingTimeString = 'Expiring in ' . $remainingTime->m . ' Months and ' . $remainingTime->d . ' Days';
+                            $expirationDate = Carbon::parse($firstStock->expiration_date);
+                            $today = Carbon::today();
+                            $remainingTime = $today->diff($expirationDate);
+    
+                            if ($expirationDate->isPast()) {
+                                $status = 'EXPIRED';
+                                $remainingTimeString = 'Expired ' . $remainingTime->y . ' Years, ' . $remainingTime->m . ' Months, and ' . $remainingTime->d . ' Days Ago';
+                            } elseif ($expirationDate->greaterThan($today->addMonths(3))) {
+                                $status = 'VIABLE';
+                                $remainingTimeString = 'Expires in ' . $remainingTime->y . ' Years, ' . $remainingTime->m . ' Months, and ' . $remainingTime->d . ' Days';
+                            } else {
+                                $status = 'EXPIRING';
+                                $remainingTimeString = 'Expiring in ' . $remainingTime->m . ' Months and ' . $remainingTime->d . ' Days';
+                            }
                         }
-                    }
-
-                    return [
-                        'purchase_order_item_id' => $firstStock->purchase_order_item_id,
-                        'serial_number' => $firstStock->serial_number,
-                        'lot_number' => $firstStock->lot_number,
-                        'expiration_date' => $firstStock->expiration_date,
-                        'product_id' => $firstStock->product_id,
-                        'quantity' => $stocks->sum('quantity'),
-                        'status' => $status,
-                        'remaining_time' => $remainingTimeString // Now included for VIABLE & EXPIRING stocks
-                    ];
-                })
-                ->values();
-        } else {
-            $groupedStocks = collect();
-        }
-
-        return array_merge($product->toArray(), [
-            'available_quantity' => $availableQuantity,
-            'quantity_level' => $availableQuantity == 0 
-            ? 'No Stock' 
-            : ($availableQuantity < $product->minimum_quantity ? 'Below Minimum' : 'Above Minimum'),
-            'default_selling_price' => $product->supplier_price + ($product->supplier_price * ($product->profit_margin / 100)),
-            'incoming_stocks' => $groupedStocks->toArray()
-        ]);
-    });
-
-    return response()->json($products);
-}
-  
+    
+                        return [
+                            'purchase_order_item_id' => $firstStock->purchase_order_item_id,
+                            'serial_number' => $firstStock->serial_number,
+                            'lot_number' => $firstStock->lot_number,
+                            'expiration_date' => $firstStock->expiration_date,
+                            'product_id' => $firstStock->product_id,
+                            'quantity' => $stocks->sum('quantity'),
+                            'status' => $status,
+                            'remaining_time' => $remainingTimeString,
+                            'barcodes' => $stocks->pluck('barcode')->toArray() // ✅ Adds barcode array for each incoming stock
+                        ];
+                    })
+                    ->values();
+            } else {
+                $groupedStocks = collect();
+            }
+    
+            return array_merge($product->toArray(), [
+                'available_quantity' => $availableQuantity,
+                'quantity_level' => $availableQuantity == 0 
+                ? 'No Stock' 
+                : ($availableQuantity < $product->minimum_quantity ? 'Below Minimum' : 'Above Minimum'),
+                'default_selling_price' => number_format($product->supplier_price + ($product->supplier_price * ($product->profit_margin / 100)), 2, '.', ''),
+                'incoming_stocks' => $groupedStocks->toArray()
+            ]);
+        });
+    
+        return response()->json($products);
+    }
 
     /**
      * Display a listing of the products.

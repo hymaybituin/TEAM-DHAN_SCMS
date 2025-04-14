@@ -27,6 +27,7 @@ class Product extends Model
         'supplier_id',
         'supplier_price',
         'location_id',
+        'is_machine',
         'warehouse_id',
         'status_id',
         'created_by',

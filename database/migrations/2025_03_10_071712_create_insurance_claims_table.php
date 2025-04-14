@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('insurance_claims', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('inventory_equipment_id')->constrained('inventory_equipment');
+            $table->foreignId('incoming_stock_id')->constrained('incoming_stocks');
             $table->date('claim_date');
             $table->text('incident_description')->nullable();
             $table->decimal('claim_amount', 15, 2);

@@ -25,6 +25,7 @@ return new class extends Migration
             $table->decimal('supplier_price', 15, 2);
             $table->foreignId('location_id')->nullable()->constrained('locations');
             $table->foreignId('warehouse_id')->nullable()->constrained('warehouses');
+            $table->boolean('is_machine')->default(false);
             $table->foreignId('status_id')->constrained('statuses');
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->constrained('users');
