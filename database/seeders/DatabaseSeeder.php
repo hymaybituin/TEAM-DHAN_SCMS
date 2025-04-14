@@ -182,6 +182,7 @@ class DatabaseSeeder extends Seeder
         // Seed suppliers
         Supplier::create(['id' => 1, 'name' => 'URIT', 'contact_info' => 'URIT', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]);
         Supplier::create(['id' => 2, 'name' => 'BIOBASE', 'contact_info' => 'BIOBASE', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]);
+        Supplier::create(['id' => 3, 'name' => 'EDAN', 'contact_info' => 'EDAN', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]);
 
 
         // Seed companies
@@ -269,6 +270,23 @@ class DatabaseSeeder extends Seeder
                     'image_url' => 'products/reagent_a.png',
                     'supplier_id' => 1,
                     'supplier_price' => 500.00,
+                    'location_id' => 1,
+                    'warehouse_id' => 1,
+                    'status_id' => 1,
+                    'created_by' => 1,
+                    'updated_by' => 1
+                ],
+                [
+                    'name' => 'EDANSD6',
+                    'sku' => strtoupper(substr('EDANSD6', 0, 4)) . strtoupper(Str::random(4)),
+                    'model' => 'SD6',
+                    'description' => 'EDAN',
+                    'product_unit_id' => 1,
+                    'minimum_quantity' => 3,
+                    'profit_margin' => 5,
+                    'image_url' => 'products/reagent_a.png',
+                    'supplier_id' => 1,
+                    'supplier_price' => 5000000.00,
                     'location_id' => 1,
                     'warehouse_id' => 1,
                     'status_id' => 1,
@@ -375,6 +393,44 @@ class DatabaseSeeder extends Seeder
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+
+        //MACHINE
+        PurchaseOrder::create([
+            'id' => 3,
+            'supplier_id' => 1,
+            'order_date' => '2025-03-10',
+            'total_amount' => 10000000.00,
+            'status_id' => 1,
+            'created_by' => 1,
+            'updated_by' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        PurchaseOrderStatus::create([
+            'id' => 1,
+            'purchase_order_id' => 3,
+            'status_id' => 1,
+            'status_date' => now(),
+            'comments' => null,
+            'created_by' => 1,
+            'updated_by' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        PurchaseOrderItem::create([
+            'id' => 1,
+            'purchase_order_id' => 3,
+            'product_id' => 6,
+            'quantity' => 2,
+            'unit_price' => 5000000.00,
+            'total_price' => 10000000.00,
+            'created_by' => 1,
+            'updated_by' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
         
 
       /*
