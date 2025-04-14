@@ -15,9 +15,8 @@ class CalibrationRecordController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'inventory_equipment_id' => 'required|exists:inventory_equipments,id',
+            'incoming_stock_id' => 'required|exists:incoming_stocks,id',
             'calibration_date' => 'required|date',
-            'next_calibration_due' => 'required|date',
             'calibrated_by' => 'required',
             'calibration_status_id' => 'required|exists:statuses,id',
             'calibration_notes' => 'required',
@@ -38,14 +37,13 @@ class CalibrationRecordController extends Controller
         $calibrationRecord = CalibrationRecord::findOrFail($id);
 
         $request->validate([
-            'inventory_equipment_id' => 'sometimes|required|exists:inventory_equipments,id',
-            'calibration_date' => 'sometimes|required|date',
-            'next_calibration_due' => 'sometimes|required|date',
-            'calibrated_by' => 'sometimes|required',
-            'calibration_status_id' => 'sometimes|required|exists:statuses,id',
-            'calibration_notes' => 'sometimes|required',
-            'created_by' => 'sometimes|required|exists:users,id',
-            'updated_by' => 'sometimes|required|exists:users,id',
+            'incoming_stock_id' => 'required|exists:incoming_stocks,id',
+            'calibration_date' => 'required|date',
+            'calibrated_by' => 'required',
+            'calibration_status_id' => 'required|exists:statuses,id',
+            'calibration_notes' => 'required',
+            'created_by' => 'required|exists:users,id',
+            'updated_by' => 'required|exists:users,id',
         ]);
 
         $calibrationRecord->update($request->all());

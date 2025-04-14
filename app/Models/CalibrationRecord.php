@@ -10,7 +10,6 @@ class CalibrationRecord extends Model
     protected $fillable = [
         'incoming_stock_id',
         'calibration_date',
-        'next_calibration_date',
         'calibrated_by',
         'calibration_status_id',
         'calibration_notes',
