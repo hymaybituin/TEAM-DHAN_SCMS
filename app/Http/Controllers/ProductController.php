@@ -249,18 +249,32 @@ public function getAllProducts()
     {
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'product_group_id' => 'required|exists:product_groups,id',
-            'description' => 'required|string',
-            'unit_of_measure' => 'required|string|max:255',
-            'minimum_quantity' => 'required|numeric|min:0',
-            'default_selling_price' => 'required|numeric|min:0',
-            'created_by' => 'required|exists:users,id',
-            'updated_by' => 'required|exists:users,id',
+            'sku' => 'required|string|max:100|unique:products,sku',
+            'model' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'product_unit_id' => 'required|exists:product_units,id',
+            'minimum_quantity' => 'required|integer|min:0',
+            'profit_margin' => 'required|numeric|min:0|max:100',
+            'image_url' => 'nullable|string',
+            'supplier_id' => 'nullable|exists:suppliers,id',
+            'supplier_price' => 'required|numeric|min:0',
+            'location_id' => 'nullable|exists:locations,id',
+            'warehouse_id' => 'nullable|exists:warehouses,id',
         ]);
+
+        // Automatically assign logged-in user
+        $validatedData['created_by'] = auth()->id();
+        $validatedData['updated_by'] = auth()->id();
+
+        // Set default status_id
+        $validatedData['status_id'] = 1;
 
         $product = Product::create($validatedData);
 
-        return response()->json($product, 201);
+        return response()->json([
+            'message' => 'Product successfully created',
+            'product' => $product
+        ], 201);
     }
 
     /**
@@ -285,20 +299,32 @@ public function getAllProducts()
     {
         $validatedData = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'product_group_id' => 'sometimes|required|exists:product_groups,id',
+            'sku' => 'sometimes|required|string|max:100|unique:products,sku,' . $product->id,
+            'model' => 'nullable|string|max:255',
             'description' => 'sometimes|required|string',
-            'unit_of_measure' => 'sometimes|required|string|max:255',
-            'minimum_quantity' => 'sometimes|required|numeric|min:0',
-            'default_selling_price' => 'sometimes|required|numeric|min:0',
-            'created_by' => 'sometimes|required|exists:users,id',
-            'updated_by' => 'sometimes|required|exists:users,id',
+            'product_unit_id' => 'sometimes|required|exists:product_units,id',
+            'minimum_quantity' => 'sometimes|required|integer|min:0',
+            'profit_margin' => 'sometimes|required|numeric|min:0|max:100',
+            'image_url' => 'nullable|string',
+            'supplier_id' => 'nullable|exists:suppliers,id',
+            'supplier_price' => 'sometimes|required|numeric|min:0',
+            'location_id' => 'nullable|exists:locations,id',
+            'warehouse_id' => 'nullable|exists:warehouses,id',
         ]);
-
+    
+        // Automatically set updated_by to the logged-in user
+        $validatedData['updated_by'] = auth()->id();
+    
+        // Ensure status_id is always 1
+        $validatedData['status_id'] = 1;
+    
         $product->update($validatedData);
-
-        return response()->json($product);
+    
+        return response()->json([
+            'message' => 'Product successfully updated',
+            'product' => $product
+        ]);
     }
-
     /**
      * Remove the specified product from storage.
      *

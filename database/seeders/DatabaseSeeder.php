@@ -397,7 +397,7 @@ class DatabaseSeeder extends Seeder
         //MACHINE
         PurchaseOrder::create([
             'id' => 3,
-            'supplier_id' => 1,
+            'supplier_id' => 3,
             'order_date' => '2025-03-10',
             'total_amount' => 10000000.00,
             'status_id' => 1,
@@ -407,7 +407,7 @@ class DatabaseSeeder extends Seeder
             'updated_at' => now(),
         ]);
         PurchaseOrderStatus::create([
-            'id' => 1,
+            'id' => 3,
             'purchase_order_id' => 3,
             'status_id' => 1,
             'status_date' => now(),
@@ -419,7 +419,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         PurchaseOrderItem::create([
-            'id' => 1,
+            'id' => 3,
             'purchase_order_id' => 3,
             'product_id' => 6,
             'quantity' => 2,

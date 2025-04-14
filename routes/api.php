@@ -29,6 +29,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('purchaseOrders/{id}/status', [PurchaseOrderController::class, 'updatePurchaseOrderStatus']);
     Route::resource('purchaseOrderItemDeliveries', PurchaseOrderItemDeliveryController::class);
     Route::post('saveScannedBarcodes', [BarcodeController::class, 'saveScannedBarcodes']);
+    Route::post('/products', [ProductController::class, 'store']);  // Create a product
+    Route::put('/products/{product}', [ProductController::class, 'update']); // Update a product
 
 });
 
