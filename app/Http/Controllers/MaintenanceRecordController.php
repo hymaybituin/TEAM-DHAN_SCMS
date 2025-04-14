@@ -20,9 +20,9 @@ class MaintenanceRecordController extends Controller
             'next_maintenance_date' => 'required|date',
             'description' => 'required',
             'performed_by' => 'required',
-            'created_by' => 'required|exists:users,id',
-            'updated_by' => 'required|exists:users,id',
         ]);
+        $validatedData['created_by'] = auth()->id();
+        $validatedData['updated_by'] = auth()->id();
 
         return MaintenanceRecord::create($request->all());
     }
@@ -42,9 +42,10 @@ class MaintenanceRecordController extends Controller
             'next_maintenance_date' => 'required|date',
             'description' => 'required',
             'performed_by' => 'required',
-            'created_by' => 'required|exists:users,id',
-            'updated_by' => 'required|exists:users,id',
         ]);
+
+        $validatedData['created_by'] = auth()->id();
+        $validatedData['updated_by'] = auth()->id();
 
         $maintenanceRecord->update($request->all());
 

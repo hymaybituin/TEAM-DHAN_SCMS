@@ -20,9 +20,10 @@ class CalibrationRecordController extends Controller
             'calibrated_by' => 'required',
             'calibration_status_id' => 'required|exists:statuses,id',
             'calibration_notes' => 'required',
-            'created_by' => 'required|exists:users,id',
-            'updated_by' => 'required|exists:users,id',
         ]);
+
+        $validatedData['created_by'] = auth()->id();
+        $validatedData['updated_by'] = auth()->id();
 
         return CalibrationRecord::create($request->all());
     }
@@ -42,9 +43,10 @@ class CalibrationRecordController extends Controller
             'calibrated_by' => 'required',
             'calibration_status_id' => 'required|exists:statuses,id',
             'calibration_notes' => 'required',
-            'created_by' => 'required|exists:users,id',
-            'updated_by' => 'required|exists:users,id',
         ]);
+
+        $validatedData['created_by'] = auth()->id();
+        $validatedData['updated_by'] = auth()->id();
 
         $calibrationRecord->update($request->all());
 
