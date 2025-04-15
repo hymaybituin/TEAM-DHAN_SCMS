@@ -192,7 +192,7 @@ const FormProduct = ({ formData, supportingData, onSubmit }) => {
       <Form.Item
         label="Location"
         name="location_id"
-        rules={[{ required: true }]}
+        // rules={[{ required: true }]}
       >
         <Select
           options={locations.map((location) => ({
@@ -204,7 +204,7 @@ const FormProduct = ({ formData, supportingData, onSubmit }) => {
       <Form.Item
         label="Warehouse"
         name="warehouse_id"
-        rules={[{ required: true }]}
+        // rules={[{ required: true }]}
       >
         <Select
           options={warehouses.map((warehouse) => ({

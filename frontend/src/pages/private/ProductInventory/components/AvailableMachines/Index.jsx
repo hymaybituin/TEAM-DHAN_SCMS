@@ -23,6 +23,7 @@ import {
   WarningOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import Barcode from "react-barcode";
 
 import ErrorContent from "../../../../../components/common/ErrorContent";
 
@@ -32,23 +33,22 @@ import { formatWithComma } from "../../../../../helpers/numbers";
 
 import Calibrations from "./components/Calibrations/Index";
 import Maintenances from "./components/Maintenance/Index";
+import FormGroupedItem from "./components/FormGroupedItems";
 
 const { Text } = Typography;
 
-function AvailableMachines({ gIs, status }) {
+function AvailableMachines({ product, onChange }) {
   const [groupedItems, setGroupItems] = useState([]);
   const [selectedGroupItem, setSelectedGroupItem] = useState(null);
 
-  const [isItemsModalOpen, setIsItemsModalOpen] = useState(null);
+  const [isFormUpdateGroupedItems, setIsFormUpdateGroupedItems] =
+    useState(false);
 
   const [isContentLoading, setIsContentLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
   const getGroupItems = async () => {
-    //const { data } = await http.get("/api/getAllProducts");
-    //console.log(data);
-    //setProducts(data);
-    setGroupItems(gIs);
+    setGroupItems(product.incoming_stocks);
   };
 
   useEffect(() => {
@@ -70,8 +70,30 @@ function AvailableMachines({ gIs, status }) {
     return <ErrorContent errorMessage={errorMsg} />;
   }
 
-  const toggleModalItems = () => {
-    setIsItemsModalOpen(!isItemsModalOpen);
+  const toggleFormUpdateGroupedItems = () => {
+    setIsFormUpdateGroupedItems(!isFormUpdateGroupedItems);
+  };
+
+  const handleFormUpdateGroupedItemSubmit = async (formData) => {
+    try {
+      toggleFormUpdateGroupedItems();
+      setIsContentLoading(true);
+      const { data } = await http.put(`/api/incomingStocks/update`, {
+        ...formData,
+        lot_number: null,
+        expiration_date: null,
+        barcodes: selectedGroupItem.barcodes,
+      });
+      if (data.message.includes("already exist")) {
+        alert(data.message);
+      } else {
+        onChange();
+      }
+    } catch (error) {
+      setErrorMsg(error.message || "Something went wrong!");
+    } finally {
+      setIsContentLoading(false);
+    }
   };
 
   const tableColumns = [
@@ -89,6 +111,17 @@ function AvailableMachines({ gIs, status }) {
       render: (_, record) => (record.for_maintenance ? "Yes" : "No"),
     },
     {
+      title: "Barcode",
+      render: (_, record) => (
+        <Barcode
+          value={record.barcodes[0]}
+          height={20}
+          fontSize={10}
+          displayValue={true}
+        />
+      ),
+    },
+    {
       title: "Status",
       dataIndex: "status",
     },
@@ -100,8 +133,8 @@ function AvailableMachines({ gIs, status }) {
 
         const handleMenuClick = ({ key }) => {
           if (key === "Update") {
-            // setSelectedProduct(record);
-            // toggleFormUpdateProductOpen();
+            setSelectedGroupItem(record);
+            toggleFormUpdateGroupedItems();
           } else if (key === "Delete") {
             // Modal.confirm({
             //   title: "Delete Product",
@@ -128,6 +161,19 @@ function AvailableMachines({ gIs, status }) {
     },
   ];
 
+  const handlePrint = (id) => {
+    const printContent = document.getElementById(id).innerHTML;
+    const printWindow = window.open("", "", "height=600,width=800");
+    printWindow.document.write("<html><head><title>Print</title>");
+    printWindow.document.write(
+      "</head><body style='margin: 0; padding: 30px 0 0 0'>"
+    );
+    printWindow.document.write(printContent);
+    printWindow.document.write("</body></html>");
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   return (
     <>
       <Spin spinning={isContentLoading} tip="loading ...">
@@ -140,45 +186,68 @@ function AvailableMachines({ gIs, status }) {
               const tabItems = [
                 {
                   key: "1",
+                  label: "Barcode",
+                  children: (
+                    <>
+                      <div id={record.barcodes[0]}>
+                        <Barcode
+                          value={record.barcodes[0]}
+                          height={30}
+                          fontSize={10}
+                          displayValue={true}
+                          width={1.4}
+                          margin={10}
+                        />
+                      </div>
+
+                      <Button
+                        type="primary"
+                        style={{ marginTop: 16, marginLeft: 40 }}
+                        onClick={() => handlePrint(record.barcodes[0])}
+                      >
+                        Print
+                      </Button>
+                    </>
+                  ),
+                },
+                {
+                  key: "2",
                   label: "Calibration Records",
                   children: (
                     <Calibrations serialNumber={record.serial_number} />
                   ),
                 },
                 {
-                  key: "2",
+                  key: "3",
                   label: "Maintenance Records",
                   children: (
                     <Maintenances serialNumber={record.serial_number} />
                   ),
                 },
               ];
-              //   const columns = [
-              //     {
-              //       title: "Field",
-              //       dataIndex: "field",
-              //       key: "field",
-              //       width: 200,
-              //     },
-              //     {
-              //       title: "Value",
-              //       dataIndex: "value",
-              //       key: "value",
-              //     },
-              //   ];
+
               return (
                 <Card>
-                  <Tabs
-                    //onChange={onChange}
-                    type="card"
-                    items={tabItems}
-                  />
+                  <Tabs type="card" items={tabItems} />
                 </Card>
               );
             },
           }}
         />
       </Spin>
+
+      <Drawer
+        title="Update Grouped Items"
+        open={isFormUpdateGroupedItems}
+        destroyOnClose
+        width={500}
+        onClose={toggleFormUpdateGroupedItems}
+      >
+        <FormGroupedItem
+          formData={selectedGroupItem}
+          onSubmit={handleFormUpdateGroupedItemSubmit}
+        />
+      </Drawer>
     </>
   );
 }

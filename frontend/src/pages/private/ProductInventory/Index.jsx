@@ -41,15 +41,18 @@ function ProductInventory() {
 
   const { productId } = useParams();
 
+  const getProductInventory = async () => {
+    const { data } = await http.get(`/api/getAllProducts/${productId}`);
+    setProduct(data);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsContentLoading(true);
-
-        const { data } = await http.get(`/api/getAllProducts/${productId}`);
-        setProduct(data);
+        await getProductInventory();
       } catch (error) {
-        setError(error.message || "Something went wrong!");
+        setErrorMsg(error.message || "Something went wrong!");
       } finally {
         setIsContentLoading(false);
       }
@@ -70,33 +73,60 @@ function ProductInventory() {
     return <Empty />;
   }
 
+  const handleAvailableMachineChange = async () => {
+    try {
+      setIsContentLoading(true);
+      await getProductInventory();
+    } catch (error) {
+      setErrorMsg(error.message || "Something went wrong!");
+    } finally {
+      setIsContentLoading(false);
+    }
+  };
+
   const consumablesTabItems = [
     {
       key: 1,
       label: "All",
       children: (
-        <AvailableConsumables gIs={product.incoming_stocks} status="ALL" />
+        <AvailableConsumables
+          product={product}
+          status="ALL"
+          onChange={handleAvailableMachineChange}
+        />
       ),
     },
     {
       key: 2,
       label: "Viable",
       children: (
-        <AvailableConsumables gIs={product.incoming_stocks} status="VIABLE" />
+        <AvailableConsumables
+          product={product}
+          status="VIABLE"
+          onChange={handleAvailableMachineChange}
+        />
       ),
     },
     {
       key: 3,
       label: "Expiring",
       children: (
-        <AvailableConsumables gIs={product.incoming_stocks} status="EXPIRING" />
+        <AvailableConsumables
+          product={product}
+          status="EXPIRING"
+          onChange={handleAvailableMachineChange}
+        />
       ),
     },
     {
       key: 4,
       label: "Expired",
       children: (
-        <AvailableConsumables gIs={product.incoming_stocks} status="EXPIRED" />
+        <AvailableConsumables
+          product={product}
+          status="EXPIRED"
+          onChange={handleAvailableMachineChange}
+        />
       ),
     },
   ];
@@ -105,7 +135,12 @@ function ProductInventory() {
     {
       key: 5,
       label: "Available", //for machine items
-      children: <AvailableMachines gIs={product.incoming_stocks} />,
+      children: (
+        <AvailableMachines
+          product={product}
+          onChange={handleAvailableMachineChange}
+        />
+      ),
     },
   ];
 
@@ -148,8 +183,8 @@ function ProductInventory() {
             </div>
             <div style={{ marginTop: 3 }}>
               <Text type="secondary">
-                <EnvironmentOutlined /> {product.warehouse.name} -{" "}
-                {product.location.name}
+                <EnvironmentOutlined /> {product?.warehouse?.name} -{" "}
+                {product?.location?.name}
               </Text>
             </div>
             <div style={{ marginTop: 8 }}>

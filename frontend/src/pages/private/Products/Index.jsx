@@ -15,12 +15,14 @@ import {
   Popover,
   Card,
   Segmented,
+  Modal,
 } from "antd";
 import {
   MoreOutlined,
   ArrowDownOutlined,
   EnvironmentOutlined,
   WarningOutlined,
+  IdcardOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 
@@ -99,9 +101,9 @@ function Products() {
       toggleFormCreateProductOpen();
       setIsContentLoading(true);
       await http.post("/api/products", formData);
-      //await getProducts();
+      await getProducts();
     } catch (error) {
-      setError(error);
+      setErrorMsg(error.message || "Something went wrong!");
     } finally {
       setIsContentLoading(false);
     }
@@ -115,7 +117,7 @@ function Products() {
       await http.post(`/api/products/${selectedProduct.id}`, formData);
       await getProducts();
     } catch (error) {
-      setError(error);
+      setErrorMsg(error.message || "Something went wrong!");
     } finally {
       setIsContentLoading(false);
     }
@@ -127,7 +129,7 @@ function Products() {
       await http.delete(`/api/products/${product.id}`);
       await getProducts();
     } catch (error) {
-      setError(error);
+      setErrorMsg(error.message || "Something went wrong!");
     } finally {
       setIsContentLoading(false);
     }
@@ -163,12 +165,14 @@ function Products() {
               {record.name} &mdash; {record.model}{" "}
             </div>
             <div>
-              <Text type="secondary">{record.supplier.name}</Text>
+              <Text type="secondary">
+                <IdcardOutlined /> {record.supplier.name}
+              </Text>
             </div>
             <div>
               <Text type="secondary">
-                <EnvironmentOutlined /> {record.warehouse.name} -{" "}
-                {record.location.name}
+                <EnvironmentOutlined /> {record?.warehouse?.name} -{" "}
+                {record?.location?.name}
               </Text>
             </div>
           </Link>
@@ -188,12 +192,10 @@ function Products() {
           "-"
         );
       },
-      filters: [
-        {
-          text: "CONTROL",
-          value: "CONTROL",
-        },
-      ],
+      filters: tags.map((tag) => ({
+        text: tag.name,
+        value: tag.name,
+      })),
       onFilter: (value, record) =>
         record.tags
           .map((tag) => tag.name)
@@ -295,13 +297,13 @@ function Products() {
             setSelectedProduct(record);
             toggleFormUpdateProductOpen();
           } else if (key === "Delete") {
-            // Modal.confirm({
-            //   title: "Delete Product",
-            //   content: "Are you sure you want to delete this product?",
-            //   onOk: async () => {
-            //     handleDeleteProduct(record);
-            //   },
-            // });
+            Modal.confirm({
+              title: "Delete Product",
+              content: "Are you sure you want to delete this product?",
+              onOk: async () => {
+                handleDeleteProduct(record);
+              },
+            });
           }
         };
 
@@ -413,8 +415,28 @@ function Products() {
     },
   ];
 
+  const machineColumns = [
+    {
+      title: "For Calibration",
+      dataIndex: "total_for_calibration",
+      width: 130,
+    },
+    {
+      title: "For Maintenance",
+      dataIndex: "total_for_maintenance",
+      width: 140,
+    },
+    {
+      title: "Demo Units",
+      dataIndex: "total_demo_units",
+      width: 110,
+    },
+  ];
+
   if (selectedProductType === "Consumables") {
-    tableColumns.splice(3, 0, ...consumablesColumns);
+    tableColumns.splice(4, 0, ...consumablesColumns);
+  } else if (selectedProductType === "Machine") {
+    tableColumns.splice(4, 0, ...machineColumns);
   }
 
   const filteredProducts = products.filter((product) => {
