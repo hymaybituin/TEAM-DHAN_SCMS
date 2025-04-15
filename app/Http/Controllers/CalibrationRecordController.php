@@ -11,7 +11,7 @@ class CalibrationRecordController extends Controller
     // Retrieve all calibration records with related entities
     public function index()
     {
-        return CalibrationRecord::with(['inventoryEquipment', 'calibrationStatus', 'createdBy', 'updatedBy'])->get();
+        return CalibrationRecord::with([  'createdBy', 'updatedBy'])->get();
     }
 
     // Store a new calibration record using serial number
@@ -21,7 +21,6 @@ class CalibrationRecordController extends Controller
             'serial_number' => 'required|exists:incoming_stocks,serial_number', 
             'calibration_date' => 'required|date',
             'calibrated_by' => 'required',
-            'calibration_status_id' => 'required|exists:statuses,id',
             'calibration_notes' => 'required',
         ]);
 
@@ -49,36 +48,37 @@ class CalibrationRecordController extends Controller
         }
     
         // Retrieve calibration records linked to the incoming stock
-        return CalibrationRecord::with(['inventoryEquipment', 'calibrationStatus', 'createdBy', 'updatedBy'])
+        return CalibrationRecord::with([  'createdBy', 'updatedBy'])
             ->where('incoming_stock_id', $incomingStock->id)
             ->get();
     }
 
-    // Update an existing calibration record using serial number
     public function update(Request $request, $id)
     {
+        // Find the calibration record using its ID
         $calibrationRecord = CalibrationRecord::findOrFail($id);
-
+    
         $request->validate([
-            'serial_number' => 'required|exists:incoming_stocks,serial_number', 
             'calibration_date' => 'required|date',
             'calibrated_by' => 'required',
-            'calibration_status_id' => 'required|exists:statuses,id',
             'calibration_notes' => 'required',
         ]);
-
+    
+        // Retrieve the incoming stock using the serial number
         $incomingStock = IncomingStock::where('serial_number', $request->serial_number)->first();
-
+    
         if (!$incomingStock) {
             return response()->json(['error' => 'No stock found for the provided serial number'], 404);
         }
-
+    
+        // Prepare the data for updating
         $validatedData = $request->all();
         $validatedData['incoming_stock_id'] = $incomingStock->id;
         $validatedData['updated_by'] = auth()->id();
-
+    
+        // Update the calibration record
         $calibrationRecord->update($validatedData);
-
+    
         return $calibrationRecord;
     }
 

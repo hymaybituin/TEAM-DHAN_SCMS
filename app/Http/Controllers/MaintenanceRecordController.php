@@ -11,7 +11,7 @@ class MaintenanceRecordController extends Controller
     // Retrieve all maintenance records with related entities
     public function index()
     {
-        return MaintenanceRecord::with(['inventoryEquipment', 'createdBy', 'updatedBy'])->get();
+        return MaintenanceRecord::with(['createdBy', 'updatedBy'])->get();
     }
 
     // Store a new maintenance record using serial number
@@ -51,7 +51,7 @@ class MaintenanceRecordController extends Controller
             return response()->json(['error' => 'No stock found for the provided serial number'], 404);
         }
 
-        return MaintenanceRecord::with(['inventoryEquipment', 'createdBy', 'updatedBy'])
+        return MaintenanceRecord::with([ 'createdBy', 'updatedBy'])
             ->where('incoming_stock_id', $incomingStock->id)
             ->get();
     }
@@ -60,30 +60,21 @@ class MaintenanceRecordController extends Controller
     public function update(Request $request, $id)
     {
         $maintenanceRecord = MaintenanceRecord::findOrFail($id);
-
+    
         $request->validate([
-            'serial_number' => 'required|exists:incoming_stocks,serial_number', 
             'maintenance_date' => 'required|date',
             'next_maintenance_date' => 'required|date',
             'description' => 'required',
             'performed_by' => 'required',
         ]);
-
-        // Retrieve incoming_stock_id using the serial number
-        $incomingStock = IncomingStock::where('serial_number', $request->serial_number)->first();
-
-        if (!$incomingStock) {
-            return response()->json(['error' => 'No stock found for the provided serial number'], 404);
-        }
-
+    
         // Prepare the data for updating
         $validatedData = $request->all();
-        $validatedData['incoming_stock_id'] = $incomingStock->id;
-        $validatedData['updated_by'] = auth()->id();
-
+        $validatedData['updated_by'] = auth()->id(); // Track updater
+    
         // Update the maintenance record
         $maintenanceRecord->update($validatedData);
-
+    
         return $maintenanceRecord;
     }
 
