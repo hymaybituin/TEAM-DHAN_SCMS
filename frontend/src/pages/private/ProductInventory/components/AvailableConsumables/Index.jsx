@@ -29,6 +29,8 @@ import http from "../../../../../services/httpService";
 import { getColumnSearchProps } from "../../../../../helpers/TableFilterProps";
 import { formatWithComma } from "../../../../../helpers/numbers";
 
+import Barcode from "react-barcode";
+
 const { Text } = Typography;
 
 function AvailableConsumables({ gIs, status }) {
@@ -44,7 +46,11 @@ function AvailableConsumables({ gIs, status }) {
     //const { data } = await http.get("/api/getAllProducts");
     //console.log(data);
     //setProducts(data);
-    const groupedItems = gIs.filter((gI) => gI.status === status);
+    let groupedItems = [...gIs];
+    if (status !== "ALL") {
+      groupedItems = gIs.filter((gI) => gI.status === status);
+    }
+
     setGroupItems(groupedItems);
   };
 
@@ -75,6 +81,7 @@ function AvailableConsumables({ gIs, status }) {
     {
       title: "Lot Number",
       dataIndex: "lot_number",
+      render: (text) => text || "N/A",
     },
     {
       title: "Quantity",
@@ -83,19 +90,18 @@ function AvailableConsumables({ gIs, status }) {
     {
       title: "Expiration Date",
       dataIndex: "expiration_date",
+      render: (text) => text || "N/A",
     },
     {
       title: "Expires In",
       dataIndex: "remaining_time",
+      render: (text) => text || "N/A",
     },
     {
       title: "Action",
       width: 50,
       render: (_, record) => {
-        const menuItems = [
-          { key: "View", label: "View" },
-          { key: "Update", label: "Update" },
-        ];
+        const menuItems = [{ key: "Update", label: "Update" }];
 
         const handleMenuClick = ({ key }) => {
           if (key === "Update") {
@@ -131,32 +137,36 @@ function AvailableConsumables({ gIs, status }) {
     <>
       <Spin spinning={isContentLoading} tip="loading ...">
         <Table
-          rowKey="id"
+          rowKey="lot_number"
           columns={tableColumns}
           dataSource={groupedItems}
           expandable={{
             expandedRowRender: (record) => {
-              //   const columns = [
-              //     {
-              //       title: "Field",
-              //       dataIndex: "field",
-              //       key: "field",
-              //       width: 200,
-              //     },
-              //     {
-              //       title: "Value",
-              //       dataIndex: "value",
-              //       key: "value",
-              //     },
-              //   ];
+              const columns = [
+                {
+                  title: "Barcode",
+                  dataIndex: "barcode",
+                  render: (text) => (
+                    <Barcode value={text} height={20} displayValue={true} />
+                  ),
+                },
+                {
+                  title: "Action",
+                  render: () => <Button type="primary">Print</Button>,
+                  width: 100,
+                },
+              ];
+
               return (
                 <Card>
-                  {/* <Table
+                  <Table
                     columns={columns}
-                    dataSource={[]}
+                    dataSource={record.barcodes.map((item) => ({
+                      barcode: item,
+                    }))}
                     pagination={false} // To display all data without pagination
-                    rowKey="key"
-                  /> */}
+                    rowKey="barcode"
+                  />
                 </Card>
               );
             },

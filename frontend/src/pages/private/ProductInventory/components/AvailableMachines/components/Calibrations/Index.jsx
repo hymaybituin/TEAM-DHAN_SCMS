@@ -9,7 +9,7 @@ import http from "../../../../../../../services/httpService";
 
 import { getColumnSearchProps } from "../../../../../../../helpers/TableFilterProps";
 
-function Calibrations({ productItemId }) {
+function Calibrations({ serialNumber }) {
   const [calibrations, setCalibrations] = useState([]);
   const [selectedCalibration, setSelectedCalibration] = useState(null);
 
@@ -22,10 +22,9 @@ function Calibrations({ productItemId }) {
   const [errorMsg, setErrorMsg] = useState(null);
 
   const getCalibrations = async () => {
-    // const { data } = await http.get(
-    //   `/api/productRecordCalibration/search/${productItemId}`
-    // );
-    setCalibrations([]);
+    const { data } = await http.get(`/api/calibrationRecords/${serialNumber}`);
+    console.log(data);
+    setCalibrations(data);
   };
 
   useEffect(() => {
@@ -59,10 +58,9 @@ function Calibrations({ productItemId }) {
     try {
       toggleFormCreateCalibrationOpen();
       setIsContentLoading(true);
-      await http.post("/api/productRecordCalibration", {
+      await http.post("/api/calibrationRecords", {
         ...formData,
-        product_item_equipment_id: productItemId,
-        status_id: 1,
+        serial_number: serialNumber,
       });
       await getCalibrations();
     } catch (error) {
@@ -76,10 +74,10 @@ function Calibrations({ productItemId }) {
     try {
       toggleFormUpdateCalibrationOpen();
       setIsContentLoading(true);
-      await http.put(
-        `/api/productRecordCalibration/${selectedCalibration.id}`,
-        formData
-      );
+      await http.put(`/api/calibrationRecords/${selectedCalibration.id}`, {
+        ...formData,
+        serial_number: serialNumber,
+      });
       await getCalibrations();
     } catch (error) {
       setErrorMsg(error.message || "Something went wrong!");
@@ -91,7 +89,7 @@ function Calibrations({ productItemId }) {
   const handleDeleteCalibration = async (calibration) => {
     try {
       setIsContentLoading(true);
-      await http.delete(`/api/productRecordCalibration/${calibration.id}`);
+      await http.delete(`/api/calibrationRecords/${calibration.id}`);
       await getCalibrations();
     } catch (error) {
       setErrorMsg(error.message || "Something went wrong!");
@@ -110,12 +108,8 @@ function Calibrations({ productItemId }) {
       dataIndex: "calibrated_by",
     },
     {
-      title: "Calibration Method",
-      dataIndex: "calibration_method",
-    },
-    {
       title: "Notes",
-      dataIndex: "notesede",
+      dataIndex: "calibration_notes",
     },
     {
       title: "Action",

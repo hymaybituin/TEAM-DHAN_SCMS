@@ -1,16 +1,17 @@
 import React, { useEffect } from "react";
-import { Form, Input, InputNumber, Button, Divider, DatePicker } from "antd";
+import { Form, Input, Button, Divider, DatePicker } from "antd";
 import dayjs from "dayjs";
 
-const FormClaim = ({ formData, onSubmit }) => {
-  const [formClaimInstance] = Form.useForm();
+const FormMaintenance = ({ formData, onSubmit }) => {
+  const [formMaintenanceInstance] = Form.useForm();
 
   useEffect(() => {
     if (formData) {
-      formClaimInstance.setFieldsValue({
+      formMaintenanceInstance.setFieldsValue({
         ...formData,
-        calibration_date: formData.calibration_date
-          ? dayjs(formData.calibration_date)
+        date_added: formData.date_added ? dayjs(formData.date_added) : null,
+        last_updated: formData.last_updated
+          ? dayjs(formData.last_updated)
           : null,
       });
     }
@@ -27,7 +28,8 @@ const FormClaim = ({ formData, onSubmit }) => {
 
     onSubmit({
       ...values,
-      calibration_date: dayjs(values.calibration_date).format("YYYY-MM-DD"),
+      date_added: dayjs(values.date_added).format("YYYY-MM-DD"),
+      last_updated: dayjs(values.last_updated).format("YYYY-MM-DD"),
     });
   };
 
@@ -39,31 +41,30 @@ const FormClaim = ({ formData, onSubmit }) => {
   return (
     <Form
       {...layout}
-      form={formClaimInstance}
+      form={formMaintenanceInstance}
       validateMessages={{
         required: "This is required.",
       }}
       onFinish={handleFormFinish}
     >
       <Form.Item
-        label="Calibrate Date"
-        name="calibration_date"
+        label="Maintenance Date"
+        name="maintenance_date"
         rules={[{ required: true }]}
       >
         <DatePicker />
       </Form.Item>
       <Form.Item
-        label="Calibrated By"
-        name="calibrated_by"
+        label="Last Update"
+        name="last_updated"
         rules={[{ required: true }]}
       >
+        <DatePicker />
+      </Form.Item>
+      <Form.Item label="Notes" name="notes" rules={[{ required: true }]}>
         <Input />
       </Form.Item>
-      <Form.Item
-        label="Notes"
-        name="calibration_notes"
-        rules={[{ required: true }]}
-      >
+      <Form.Item label="Actual Image" name="actual_image">
         <Input />
       </Form.Item>
       <Divider />
@@ -78,4 +79,4 @@ const FormClaim = ({ formData, onSubmit }) => {
   );
 };
 
-export default FormClaim;
+export default FormMaintenance;

@@ -14,6 +14,7 @@ import {
   Popover,
   Card,
   Segmented,
+  Tabs,
 } from "antd";
 import {
   MoreOutlined,
@@ -30,6 +31,7 @@ import { getColumnSearchProps } from "../../../../../helpers/TableFilterProps";
 import { formatWithComma } from "../../../../../helpers/numbers";
 
 import Calibrations from "./components/Calibrations/Index";
+import Maintenances from "./components/Maintenance/Index";
 
 const { Text } = Typography;
 
@@ -76,6 +78,7 @@ function AvailableMachines({ gIs, status }) {
     {
       title: "Serial",
       dataIndex: "serial_number",
+      ...getColumnSearchProps("serial_number"),
     },
     {
       title: "For Calibration",
@@ -93,10 +96,7 @@ function AvailableMachines({ gIs, status }) {
       title: "Action",
       width: 50,
       render: (_, record) => {
-        const menuItems = [
-          { key: "View", label: "View" },
-          { key: "Update", label: "Update" },
-        ];
+        const menuItems = [{ key: "Update", label: "Update" }];
 
         const handleMenuClick = ({ key }) => {
           if (key === "Update") {
@@ -132,11 +132,27 @@ function AvailableMachines({ gIs, status }) {
     <>
       <Spin spinning={isContentLoading} tip="loading ...">
         <Table
-          rowKey="id"
+          rowKey="serial_number"
           columns={tableColumns}
           dataSource={groupedItems}
           expandable={{
             expandedRowRender: (record) => {
+              const tabItems = [
+                {
+                  key: "1",
+                  label: "Calibration Records",
+                  children: (
+                    <Calibrations serialNumber={record.serial_number} />
+                  ),
+                },
+                {
+                  key: "2",
+                  label: "Maintenance Records",
+                  children: (
+                    <Maintenances serialNumber={record.serial_number} />
+                  ),
+                },
+              ];
               //   const columns = [
               //     {
               //       title: "Field",
@@ -152,13 +168,11 @@ function AvailableMachines({ gIs, status }) {
               //   ];
               return (
                 <Card>
-                  {/* <Table
-                    columns={columns}
-                    dataSource={[]}
-                    pagination={false} // To display all data without pagination
-                    rowKey="key"
-                  /> */}
-                  <Calibrations />
+                  <Tabs
+                    //onChange={onChange}
+                    type="card"
+                    items={tabItems}
+                  />
                 </Card>
               );
             },

@@ -69,39 +69,58 @@ function ProductInventory() {
     return <Empty />;
   }
 
-  const tabItems = [
+  const consumablesTabItems = [
     {
       key: 1,
+      label: "All",
+      children: (
+        <AvailableConsumables gIs={product.incoming_stocks} status="ALL" />
+      ),
+    },
+    {
+      key: 2,
       label: "Viable",
       children: (
         <AvailableConsumables gIs={product.incoming_stocks} status="VIABLE" />
       ),
     },
     {
-      key: 2,
+      key: 3,
       label: "Expiring",
       children: (
         <AvailableConsumables gIs={product.incoming_stocks} status="EXPIRING" />
       ),
     },
     {
-      key: 3,
+      key: 4,
       label: "Expired",
       children: (
         <AvailableConsumables gIs={product.incoming_stocks} status="EXPIRED" />
       ),
     },
+  ];
+
+  const machineTabItems = [
     {
-      key: 4,
+      key: 5,
       label: "Available", //for machine items
       children: <AvailableMachines gIs={product.incoming_stocks} />,
     },
+  ];
+
+  let tabItems = [
     {
-      key: 5,
+      key: 6,
       label: "Release",
       children: "Release",
     },
   ];
+
+  if (product.is_machine) {
+    tabItems = [...machineTabItems, ...tabItems];
+  } else {
+    tabItems = [...consumablesTabItems, ...tabItems];
+  }
 
   return (
     <>
