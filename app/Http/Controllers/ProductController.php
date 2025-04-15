@@ -31,20 +31,20 @@ class ProductController extends Controller
             'incomingStocks.calibrationRecords',  
             'incomingStocks.maintenanceRecords'  
         ]);
-
+    
         // If productId is provided, filter the query
         if ($productId !== null) {
             $query->where('id', $productId);
         }
-
-        $products = $query->get()  
+    
+        $products = $query->get()
             ->map(function ($product) {  
                 $availableQuantity = $product->incomingStocks  
                     ->filter(fn($stock) => is_null($stock->expiration_date) || !Carbon::parse($stock->expiration_date)->isPast())  
                     ->sum('quantity');  
-
-                if ($product->incomingStocks->isNotEmpty()) {  
-                    $groupedStocks = $product->incomingStocks  
+    
+                $groupedStocks = $product->incomingStocks->isNotEmpty()
+                    ? $product->incomingStocks  
                         ->groupBy(fn($stock) => implode('|', [  
                             $stock->purchase_order_item_id,  
                             $stock->serial_number ?? 'NULL',  
@@ -56,17 +56,16 @@ class ProductController extends Controller
                             $firstStock = $stocks->first();  
                             $remainingTimeString = null;  
                             $status = 'In Stock';  
-                            $quantity = 0;  
-
+                            $quantity = $stocks->sum('quantity');  
+    
                             if (!$product->is_machine) {  
                                 if (is_null($firstStock->lot_number) || is_null($firstStock->expiration_date)) {  
                                     $status = 'INSTOCK';  
-                                    $quantity = $stocks->sum('quantity');  
                                 } else {  
                                     $expirationDate = Carbon::parse($firstStock->expiration_date);  
                                     $today = Carbon::today();  
                                     $remainingTime = $today->diff($expirationDate);  
-
+    
                                     if ($expirationDate->isPast()) {  
                                         $status = 'EXPIRED';  
                                         $remainingTimeString = 'Expired ' . $remainingTime->y . ' Years, ' . $remainingTime->m . ' Months, and ' . $remainingTime->d . ' Days Ago';  
@@ -77,11 +76,9 @@ class ProductController extends Controller
                                         $status = 'EXPIRING';  
                                         $remainingTimeString = 'Expiring in ' . $remainingTime->m . ' Months and ' . $remainingTime->d . ' Days';  
                                     }  
-                                    $quantity = $stocks->sum('quantity');  
                                 }  
                             }  
-
-                            // Retrieve and sort calibration and maintenance records by date (latest first)
+    
                             $calibrationRecords = $firstStock->calibrationRecords
                                 ->sortByDesc('calibration_date')
                                 ->map(fn($record) => [
@@ -90,7 +87,7 @@ class ProductController extends Controller
                                     'calibration_notes' => $record->calibration_notes,
                                     'calibration_status_id' => $record->calibration_status_id
                                 ])->values()->toArray();
-
+    
                             $maintenanceRecords = $firstStock->maintenanceRecords
                                 ->sortByDesc('maintenance_date')
                                 ->map(fn($record) => [
@@ -99,17 +96,16 @@ class ProductController extends Controller
                                     'performed_by' => $record->performed_by,
                                     'description' => $record->description
                                 ])->values()->toArray();
-
+    
                             // Determine if calibration is needed
                             $latestCalibration = $calibrationRecords[0] ?? null;
                             $forCalibration = !$latestCalibration;
-
+    
                             // Determine if maintenance is needed
                             $latestMaintenance = $maintenanceRecords[0] ?? null;
                             $nextMaintenanceDate = $latestMaintenance['next_maintenance_date'] ?? null;
                             $forMaintenance =  (Carbon::today())->diffInDays( Carbon::parse($nextMaintenanceDate)) < 30;
-
-                            
+    
                             return [  
                                 'purchase_order_item_id' => $firstStock->purchase_order_item_id,  
                                 'serial_number' => $firstStock->serial_number,  
@@ -125,25 +121,34 @@ class ProductController extends Controller
                                 'maintenance_records' => $maintenanceRecords,  
                                 'for_maintenance' => (bool) $forMaintenance  
                             ];  
-                        })  
-                        ->values();  
-                } else {  
-                    $groupedStocks = collect();  
-                }  
-
+                        })
+                        ->values()
+                    : collect();
+    
+                // ✅ Calculate `total_for_calibration` and `total_for_maintenance` AFTER grouping
+                if($product->is_machine){
+                    $totalForCalibration = $groupedStocks->filter(fn($stock) => $stock['for_calibration'] === true)->count();
+                    $totalForMaintenance = $groupedStocks->filter(fn($stock) => $stock['for_maintenance'] === true)->count();
+                }
+                else{
+                    $totalForCalibration = 0;
+                    $totalForMaintenance = 0;
+                }
+    
                 return array_merge($product->toArray(), [  
                     'available_quantity' => $availableQuantity,  
                     'quantity_level' => $availableQuantity == 0  
-                    ? 'No Stock'  
-                    : ($availableQuantity < $product->minimum_quantity ? 'Below Minimum' : 'Above Minimum'),  
+                        ? 'No Stock'  
+                        : ($availableQuantity < $product->minimum_quantity ? 'Below Minimum' : 'Above Minimum'),  
                     'default_selling_price' => number_format($product->supplier_price + ($product->supplier_price * ($product->profit_margin / 100)), 2, '.', ''),  
-                    'incoming_stocks' => $groupedStocks->toArray()  
+                    'incoming_stocks' => $groupedStocks->toArray(),
+                    'total_for_calibration' => $totalForCalibration, // ✅ Fixed Calculation
+                    'total_for_maintenance' => $totalForMaintenance // ✅ Fixed Calculation
                 ]);  
-            });  
-
-            return response()->json($productId !== null ? $products->first() : $products);
+            });
+    
+        return response()->json($productId !== null ? $products->first() : $products);
     }
-   
 
     /**
      * Display a listing of the products.
