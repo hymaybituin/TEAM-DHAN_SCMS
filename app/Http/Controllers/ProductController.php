@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Log;
+use Storage;
 use Carbon\Carbon;
 use App\Models\Product;
 use App\Models\ProductType;
@@ -9,145 +11,11 @@ use Illuminate\Http\Request;
 use App\Models\PurchaseOrder;
 use App\Models\SupplierProduct;
 use App\Models\PurchaseOrderItem;
+use Illuminate\Http\UploadedFile;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the products with their total quantity and status.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    /*public function getProductsWithQuantityAndStatus()
-    {
-        $productTypes = ProductType::with(['productGroups.products.inventoryConsumables', 'productGroups.products.inventoryEquipment'])
-            ->get()
-            ->map(function ($productType) {
-                $productGroups = $productType->productGroups->map(function ($productGroup) {
-                    $products = $productGroup->products->map(function ($product) {
-                        $consumableQuantity = 0;
-                        $equipmentQuantity = 0;
 
-                        if ($product->productGroup->productType->name == 'consumable') {
-                            $consumableQuantity = $product->inventoryConsumables
-                                ->where('expiry_date', '>', now())
-                                ->sum('quantity');
-                        }
-
-                        if ($product->productGroup->productType->name === 'equipment') {
-                            $statusesToCheck = ['In Stock', 'Return Demo (working)']; // Add more statuses as needed
-                            $equipmentQuantity = $product->inventoryEquipment
-                                ->filter(function ($equipment) use ($statusesToCheck) {
-                                    return in_array($equipment->status->name, $statusesToCheck, true);
-                                })
-                                ->count();
-                        }
-
-                        $availableQuantity = $consumableQuantity + $equipmentQuantity;
-
-                        // Retrieve supplier price
-                        $supplierProduct = SupplierProduct::where('product_id', $product->id)->first();
-                        $supplierPrice = $supplierProduct ? $supplierProduct->price : 0;
-
-                        // Calculate margin percentage
-                        $margin = $product->default_selling_price > 0
-                            ? (($product->default_selling_price - $supplierPrice) / $product->default_selling_price) * 100
-                            : 0;
-
-                        $productData = [
-                            'id' => $product->id,
-                            'name' => $product->name,
-                            'sku' => $product->sku,
-                            'barcode' => $product->barcode,
-                            'description' => $product->description,
-                            'model' => $product->model,
-                            'product_category_id' => $product->product_category_id,
-                            'product_category' => $product->productCategory ? $product->productCategory->name : null,
-                            'product_unit_id' => $product->product_unit_id,
-                            'product_unit' => $product->productUnit ? $product->productUnit->name : null,
-                            'minimum_quantity' => $product->minimum_quantity,
-                            'available_quantity' => $availableQuantity,
-                            'quantity_level' => $availableQuantity < $product->minimum_quantity ? 'Below Minimum' : 'Above Minimum',
-                            'default_selling_price' => $product->default_selling_price,
-                            'supplier_price' => $supplierPrice,
-                            'margin_percentage' => round($margin, 2) . '%',
-                            'image_url' => $product->image_url,
-                            'created_at' => $product->created_at,
-                            'updated_at' => $product->updated_at,
-                            'status_id' => $product->status,
-                            'created_by' => $product->creator,
-                            'updated_by' => $product->updater,
-                            'location' => $product->location,
-                            'warehouse' => $product->warehouse,
-                        ];
-
-                        if ($product->productGroup->productType->name == 'consumable') {
-                            $productData['inventory_consumables'] = $product->inventoryConsumables
-                                ->where('quantity', '>', 0)
-                                ->map(function ($inventory) {
-                                    $expiryDate = Carbon::parse($inventory->expiry_date);
-                                    $remainingTime = now()->diff($expiryDate);
-
-                                    // Determine status
-                                    $status = 'VIABLE';
-                                    $remainingTimeString = $remainingTime->y . ' Years, ' . $remainingTime->m . ' Months, and ' . $remainingTime->d . ' Days';
-                                    
-                                    if ($expiryDate->isPast()) {
-                                        $status = 'EXPIRED';
-                                        $expiredTime = $expiryDate->diff(now());
-                                        $remainingTimeString = 'Expired ' . $expiredTime->y . ' Years, ' . $expiredTime->m . ' Months, and ' . $expiredTime->d . ' Days Ago';
-                                    } elseif ($remainingTime->m < 1 && $remainingTime->y === 0) {
-                                        $status = 'EXPIRING';
-                                    }
-
-                                    return [
-                                        'id' => $inventory->id,
-                                        'product_id' => $inventory->product_id,
-                                        'purchase_order_item_id' => $inventory->purchase_order_item_id,
-                                        'barcode' => $inventory->barcode,
-                                        'lot_number' => $inventory->lot_number,
-                                        'expiry_date' => $inventory->expiry_date,
-                                        'quantity' => $inventory->quantity,
-                                        'notes' => $inventory->notes,
-                                        'created_by' => $inventory->created_by,
-                                        'updated_by' => $inventory->updated_by,
-                                        'created_at' => $inventory->created_at,
-                                        'updated_at' => $inventory->updated_at,
-                                        'remaining_time' => $remainingTimeString, // Meaningful time for expired items
-                                        'status' => $status,
-                                    ];
-                                });
-                        }
-
-                        if ($product->productGroup->productType->name === 'equipment') {
-                            $statusesToCheck = ['In Stock', 'Return Demo (working)', 'Available'];
-                            $productData['inventory_equipment'] = $product->inventoryEquipment
-                                ->filter(function ($equipment) use ($statusesToCheck) {
-                                    return in_array($equipment->status->name, $statusesToCheck, true);
-                                });
-                        }
-
-                        return $productData;
-                    });
-
-                    return [
-                        'group_id' => $productGroup->id,
-                        'group_name' => $productGroup->name,
-                        'products' => $products
-                    ];
-                });
-
-                return [
-                    'type_id' => $productType->id,
-                    'type_name' => $productType->name,
-                    'product_groups' => $productGroups
-                ];
-            });
-
-        return response()->json($productTypes);
-    }*/
-
-
-   
 
     public function getAllProducts($productId = null)  
     {  
@@ -275,6 +143,7 @@ class ProductController extends Controller
 
             return response()->json($productId !== null ? $products->first() : $products);
     }
+   
 
     /**
      * Display a listing of the products.
@@ -295,37 +164,67 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
+        // ✅ Remove `image` from validation if it's explicitly set to null
+        if ($request->input('image') === null) {
+            $request->request->remove('image'); // Prevent Laravel from treating it as a file
+        }
+    
+        // ✅ Convert 'is_machine' to a proper boolean before validation
+        $request->merge([
+            'is_machine' => filter_var($request->is_machine, FILTER_VALIDATE_BOOLEAN),
+        ]);
+    
+        // ✅ Apply conditional validation: Only validate image if it exists
+        $imageRules = $request->hasFile('image') ? 'file|image|mimes:jpeg,png,jpg,gif|max:2048' : 'nullable';
+    
+        // ✅ Validate the incoming request
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|max:100|unique:products,sku',
             'model' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'product_unit_id' => 'required|exists:product_units,id',
             'minimum_quantity' => 'required|integer|min:0',
             'profit_margin' => 'required|numeric|min:0|max:100',
-            'image_url' => 'nullable|string',
+            'image' => $imageRules, // Corrected validation rule for image
             'supplier_id' => 'nullable|exists:suppliers,id',
             'supplier_price' => 'required|numeric|min:0',
             'location_id' => 'nullable|exists:locations,id',
             'warehouse_id' => 'nullable|exists:warehouses,id',
-            'is_machine' => 'required|boolean', // Ensure machine flag is properly validated
+            'is_machine' => 'required|boolean', // Properly treated as boolean
+            'tag_id' => 'nullable|string', // Validate tag_id as a comma-separated string
         ]);
     
-        // Assign logged-in user
+        // ✅ Handle image upload or removal
+        if ($request->hasFile('image')) {
+            // Save new image
+            $imagePath = $request->file('image')->store('products', 'public');
+            $validatedData['image_url'] = asset("storage/{$imagePath}");
+        } elseif ($request->input('image') === null) {
+            // Remove image reference if explicitly set to null
+            $validatedData['image_url'] = null;
+        }
+    
+        // ✅ Assign logged-in user
         $validatedData['created_by'] = auth()->id();
         $validatedData['updated_by'] = auth()->id();
     
-        // Set default status_id
+        // ✅ Set default status_id
         $validatedData['status_id'] = 1;
     
+        // ✅ Create product
         $product = Product::create($validatedData);
+    
+        // ✅ Handle tag associations if tag_id is provided
+        if (!empty($request->tag_id)) {
+            $tagIds = explode(',', $request->tag_id); // Convert comma-separated string to array
+            $product->tags()->sync($tagIds); // Sync tags instead of attach to prevent duplicates
+        }
     
         return response()->json([
             'message' => 'Product successfully created',
             'product' => $product
         ], 201);
     }
-
     /**
      * Display the specified product.
      *
@@ -346,32 +245,72 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        $validatedData = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'sku' => 'sometimes|required|string|max:100|unique:products,sku,' . $product->id,
-            'model' => 'nullable|string|max:255',
-            'description' => 'sometimes|required|string',
-            'product_unit_id' => 'sometimes|required|exists:product_units,id',
-            'minimum_quantity' => 'sometimes|required|integer|min:0',
-            'profit_margin' => 'sometimes|required|numeric|min:0|max:100',
-            'image_url' => 'nullable|string',
-            'supplier_id' => 'nullable|exists:suppliers,id',
-            'supplier_price' => 'sometimes|required|numeric|min:0',
-            'location_id' => 'nullable|exists:locations,id',
-            'warehouse_id' => 'nullable|exists:warehouses,id',
-            'is_machine' => 'sometimes|required|boolean', // Validate the is_machine field
-            'status_id' => 'sometimes|required|exists:statuses,id', // Allow updating status_id explicitly
+
+        // Handle `_method=PUT` workaround
+        if ($request->has('_method') && $request->_method === 'PUT') {
+            $request->setMethod('PUT');
+        }
+
+        // Convert 'is_machine' to boolean before validation
+        $request->merge([
+            'is_machine' => filter_var($request->input('is_machine'), FILTER_VALIDATE_BOOLEAN),
         ]);
-    
-        // Automatically set updated_by to the logged-in user
-        $validatedData['updated_by'] = auth()->id();
-    
-        // Update the product record
-        $product->update($validatedData);
-    
+
+        // Manually extract request fields
+        $validatedData = [
+            'name' => $request->input('name', $product->name),
+            'model' => $request->input('model', $product->model),
+            'description' => $request->input('description', $product->description),
+            'product_unit_id' => $request->input('product_unit_id', $product->product_unit_id),
+            'minimum_quantity' => $request->input('minimum_quantity', $product->minimum_quantity),
+            'profit_margin' => $request->input('profit_margin', $product->profit_margin),
+            'supplier_id' => $request->input('supplier_id', $product->supplier_id),
+            'supplier_price' => $request->input('supplier_price', $product->supplier_price),
+            'location_id' => $request->input('location_id', $product->location_id),
+            'warehouse_id' => $request->input('warehouse_id', $product->warehouse_id),
+            'is_machine' => $request->input('is_machine', $product->is_machine),
+            'status_id' => $request->input('status_id', $product->status_id),
+            'updated_by' => auth()->id(),
+        ];
+        // ✅ Handle Image Upload (Remove Image If `null`)
+
+        
+        if ($request->hasFile('image')) {
+         
+            // Save new image
+            $newImagePath = $request->file('image')->store('products', 'public');
+            $validatedData['image_url'] = asset("storage/{$newImagePath}");
+
+            // Delete old image if a new image is uploaded
+            if ($product->image_url) {
+                $oldImagePath = str_replace(asset('storage'), 'storage', $product->image_url);
+                if (file_exists(public_path($oldImagePath))) {
+                    unlink(public_path($oldImagePath));
+                }
+            }
+        } elseif ($request->input('image') == "null" && $product->image_url) {
+            // Remove image if explicitly set to `null`
+            $oldImagePath = str_replace(asset('storage'), 'storage', $product->image_url);
+            if (file_exists(public_path($oldImagePath))) {
+                unlink(public_path($oldImagePath)); // Remove existing file
+            }
+            $validatedData['image_url'] = null; // Remove image reference from DB
+        }
+
+      
+        
+        // Force update to apply changes
+        $product->forceFill($validatedData)->save();
+
+        // ✅ Fix: Only Sync Tags (No Need to Update `tag_id` in `products`)
+        if (!empty($request->tag_id)) {
+            $tagIds = explode(',', $request->tag_id);
+            $product->tags()->sync($tagIds);
+        }
+
         return response()->json([
             'message' => 'Product successfully updated',
-            'product' => $product
+            'product' => $product->fresh()
         ]);
     }
     /**
