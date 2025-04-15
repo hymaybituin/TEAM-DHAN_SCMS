@@ -2,57 +2,87 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CalibrationRecord;
 use Illuminate\Http\Request;
+use App\Models\IncomingStock;
+use App\Models\CalibrationRecord;
 
 class CalibrationRecordController extends Controller
 {
+    // Retrieve all calibration records with related entities
     public function index()
     {
-        return CalibrationRecord::with(['inventoryEquipment', 'calibrationStatus', 'createdBy', 'updatedBy'])->get();
+        return CalibrationRecord::with([  'createdBy', 'updatedBy'])->get();
     }
 
+    // Store a new calibration record using serial number
     public function store(Request $request)
     {
         $request->validate([
-            'inventory_equipment_id' => 'required|exists:inventory_equipments,id',
+            'serial_number' => 'required|exists:incoming_stocks,serial_number', 
             'calibration_date' => 'required|date',
-            'next_calibration_due' => 'required|date',
             'calibrated_by' => 'required',
-            'calibration_status_id' => 'required|exists:statuses,id',
             'calibration_notes' => 'required',
-            'created_by' => 'required|exists:users,id',
-            'updated_by' => 'required|exists:users,id',
         ]);
 
-        return CalibrationRecord::create($request->all());
+        $incomingStock = IncomingStock::where('serial_number', $request->serial_number)->first();
+
+        if (!$incomingStock) {
+            return response()->json(['error' => 'No stock found for the provided serial number'], 404);
+        }
+
+        $validatedData = $request->all();
+        $validatedData['incoming_stock_id'] = $incomingStock->id;
+        $validatedData['created_by'] = auth()->id();
+        $validatedData['updated_by'] = auth()->id();
+
+        return CalibrationRecord::create($validatedData);
     }
 
-    public function show($id)
+    public function show($serialNumber)
     {
-        return CalibrationRecord::with(['inventoryEquipment', 'calibrationStatus', 'createdBy', 'updatedBy'])->findOrFail($id);
+        // Find calibration records by serial number
+        $incomingStock = IncomingStock::where('serial_number', $serialNumber)->first();
+    
+        if (!$incomingStock) {
+            return response()->json(['error' => 'No stock found for the provided serial number'], 404);
+        }
+    
+        // Retrieve calibration records linked to the incoming stock
+        return CalibrationRecord::with([  'createdBy', 'updatedBy'])
+            ->where('incoming_stock_id', $incomingStock->id)
+            ->get();
     }
 
     public function update(Request $request, $id)
     {
+        // Find the calibration record using its ID
         $calibrationRecord = CalibrationRecord::findOrFail($id);
-
+    
         $request->validate([
-            'inventory_equipment_id' => 'sometimes|required|exists:inventory_equipments,id',
-            'calibration_date' => 'sometimes|required|date',
-            'next_calibration_due' => 'sometimes|required|date',
-            'calibrated_by' => 'sometimes|required',
-            'calibration_status_id' => 'sometimes|required|exists:statuses,id',
-            'calibration_notes' => 'sometimes|required',
-            'created_by' => 'sometimes|required|exists:users,id',
-            'updated_by' => 'sometimes|required|exists:users,id',
+            'calibration_date' => 'required|date',
+            'calibrated_by' => 'required',
+            'calibration_notes' => 'required',
         ]);
-
-        $calibrationRecord->update($request->all());
-
+    
+        // Retrieve the incoming stock using the serial number
+        $incomingStock = IncomingStock::where('serial_number', $request->serial_number)->first();
+    
+        if (!$incomingStock) {
+            return response()->json(['error' => 'No stock found for the provided serial number'], 404);
+        }
+    
+        // Prepare the data for updating
+        $validatedData = $request->all();
+        $validatedData['incoming_stock_id'] = $incomingStock->id;
+        $validatedData['updated_by'] = auth()->id();
+    
+        // Update the calibration record
+        $calibrationRecord->update($validatedData);
+    
         return $calibrationRecord;
     }
 
+    // Delete a specific calibration record by ID
     public function destroy($id)
     {
         $calibrationRecord = CalibrationRecord::findOrFail($id);

@@ -8,6 +8,8 @@ use App\Http\Controllers\BarcodeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\CalibrationRecordController;
+use App\Http\Controllers\MaintenanceRecordController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\PurchaseOrderItemDeliveryController;
 
@@ -29,10 +31,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('products', [ProductController::class, 'store']);  // Create a product
     Route::put('products/{product}', [ProductController::class, 'update']); // Update a product
 
+    
+    Route::apiResource('calibrationRecords', CalibrationRecordController::class)->except(['show']);
+    Route::get('calibrationRecords/{serial_number}', [CalibrationRecordController::class, 'show']);
+
+    Route::apiResource('maintenanceRecords', MaintenanceRecordController::class)->except(['show']);
+    Route::get('maintenanceRecords/{serial_number}', [MaintenanceRecordController::class, 'show']);
+
 });
 
 Route::get('/purchaseOrders/{purchaseOrderId?}', [PurchaseOrderController::class, 'getPurchaseOrderDetails']);
 
-Route::get('getAllProducts', [ProductController::class, 'getAllProducts']);
+Route::get('getAllProducts/{productId?}', [ProductController::class, 'getAllProducts']);
 
 

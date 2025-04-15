@@ -2,53 +2,83 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MaintenanceRecord;
 use Illuminate\Http\Request;
+use App\Models\IncomingStock;
+use App\Models\MaintenanceRecord;
 
 class MaintenanceRecordController extends Controller
 {
+    // Retrieve all maintenance records with related entities
     public function index()
     {
-        return MaintenanceRecord::with(['inventoryEquipment', 'createdBy', 'updatedBy'])->get();
+        return MaintenanceRecord::with(['createdBy', 'updatedBy'])->get();
     }
 
+    // Store a new maintenance record using serial number
     public function store(Request $request)
     {
         $request->validate([
-            'inventory_equipment_id' => 'required|exists:inventory_equipments,id',
+            'serial_number' => 'required|exists:incoming_stocks,serial_number', // Validate using serial number
             'maintenance_date' => 'required|date',
+            'next_maintenance_date' => 'required|date',
             'description' => 'required',
             'performed_by' => 'required',
-            'created_by' => 'required|exists:users,id',
-            'updated_by' => 'required|exists:users,id',
         ]);
 
-        return MaintenanceRecord::create($request->all());
+        // Retrieve incoming_stock_id using the serial number
+        $incomingStock = IncomingStock::where('serial_number', $request->serial_number)->first();
+
+        if (!$incomingStock) {
+            return response()->json(['error' => 'No stock found for the provided serial number'], 404);
+        }
+
+        // Prepare the data
+        $validatedData = $request->all();
+        $validatedData['incoming_stock_id'] = $incomingStock->id;
+        $validatedData['created_by'] = auth()->id();
+        $validatedData['updated_by'] = auth()->id();
+
+        // Create the maintenance record
+        return MaintenanceRecord::create($validatedData);
     }
 
-    public function show($id)
+    // Retrieve maintenance records by serial number instead of ID
+    public function show($serialNumber)
     {
-        return MaintenanceRecord::with(['inventoryEquipment', 'createdBy', 'updatedBy'])->findOrFail($id);
+        $incomingStock = IncomingStock::where('serial_number', $serialNumber)->first();
+
+        if (!$incomingStock) {
+            return response()->json(['error' => 'No stock found for the provided serial number'], 404);
+        }
+
+        return MaintenanceRecord::with([ 'createdBy', 'updatedBy'])
+            ->where('incoming_stock_id', $incomingStock->id)
+            ->get();
     }
 
+    // Update an existing maintenance record using serial number
     public function update(Request $request, $id)
     {
         $maintenanceRecord = MaintenanceRecord::findOrFail($id);
-
+    
         $request->validate([
-            'inventory_equipment_id' => 'sometimes|required|exists:inventory_equipments,id',
-            'maintenance_date' => 'sometimes|required|date',
-            'description' => 'sometimes|required',
-            'performed_by' => 'sometimes|required',
-            'created_by' => 'sometimes|required|exists:users,id',
-            'updated_by' => 'sometimes|required|exists:users,id',
+            'maintenance_date' => 'required|date',
+            'next_maintenance_date' => 'required|date',
+            'description' => 'required',
+            'performed_by' => 'required',
         ]);
-
-        $maintenanceRecord->update($request->all());
-
+    
+        // Prepare the data for updating
+        $validatedData = $request->all();
+        $validatedData['updated_by'] = auth()->id(); // Track updater
+    
+        // Update the maintenance record
+        $maintenanceRecord->update($validatedData);
+    
         return $maintenanceRecord;
     }
 
+    // Delete a specific maintenance record by ID
     public function destroy($id)
     {
         $maintenanceRecord = MaintenanceRecord::findOrFail($id);
