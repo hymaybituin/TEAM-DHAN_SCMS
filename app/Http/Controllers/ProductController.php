@@ -193,7 +193,7 @@ class ProductController extends Controller
                             if (!$product->is_machine) {  
                                 if (is_null($firstStock->lot_number) || is_null($firstStock->expiration_date)) {  
                                     $status = 'INSTOCK';  
-                                    $quantity = 'N/A';  
+                                    $quantity = $stocks->sum('quantity');  
                                 } else {  
                                     $expirationDate = Carbon::parse($firstStock->expiration_date);  
                                     $today = Carbon::today();  
@@ -234,10 +234,7 @@ class ProductController extends Controller
 
                             // Determine if calibration is needed
                             $latestCalibration = $calibrationRecords[0] ?? null;
-                            $forCalibration = !$latestCalibration || (
-                                Carbon::parse($latestCalibration['calibration_date'])->isPast() ||  
-                                Carbon::parse($latestCalibration['calibration_date'])->diffInDays(Carbon::today()) <= 30  
-                            );
+                            $forCalibration = !$latestCalibration;
 
                             // Determine if maintenance is needed
                             $latestMaintenance = $maintenanceRecords[0] ?? null;
