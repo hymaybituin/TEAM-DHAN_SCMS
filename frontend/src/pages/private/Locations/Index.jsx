@@ -19,7 +19,7 @@ function Locations() {
     useState(false);
 
   const [isContentLoading, setIsContentLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   const getLocations = async () => {
     const { data } = await http.get("/api/locations");
@@ -32,7 +32,7 @@ function Locations() {
         setIsContentLoading(true);
         await getLocations();
       } catch (error) {
-        setError(error);
+        setErrorMsg(error.message || "Something went wrong!");
       } finally {
         setIsContentLoading(false);
       }
@@ -41,8 +41,8 @@ function Locations() {
     fetchLocations();
   }, []);
 
-  if (error) {
-    return <ErrorContent />;
+  if (errorMsg) {
+    return <ErrorContent errorMessage={errorMsg} />;
   }
 
   const toggleFormCreateLocationOpen = () => {
@@ -60,7 +60,7 @@ function Locations() {
       await http.post("/api/locations", { ...formData, status_id: 1 });
       await getLocations();
     } catch (error) {
-      setError(error);
+      setErrorMsg(error.message || "Something went wrong!");
     } finally {
       setIsContentLoading(false);
     }
@@ -73,7 +73,7 @@ function Locations() {
       await http.put(`/api/locations/${selectedLocation.id}`, formData);
       await getLocations();
     } catch (error) {
-      setError(error);
+      setErrorMsg(error.message || "Something went wrong!");
     } finally {
       setIsContentLoading(false);
     }
@@ -85,7 +85,7 @@ function Locations() {
       await http.delete(`/api/locations/${location.id}`);
       await getLocations();
     } catch (error) {
-      setError(error);
+      setErrorMsg(error.message || "Something went wrong!");
     } finally {
       setIsContentLoading(false);
     }
@@ -96,6 +96,10 @@ function Locations() {
       title: "Name",
       dataIndex: "name",
       ...getColumnSearchProps("name"),
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
     },
     {
       title: "Action",

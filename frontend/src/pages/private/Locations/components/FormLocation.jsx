@@ -39,6 +39,13 @@ const FormLocation = ({ formData, onSubmit }) => {
       <Form.Item label="Name" name="name" rules={[{ required: true }]}>
         <Input />
       </Form.Item>
+      <Form.Item
+        label="Description"
+        name="description"
+        rules={[{ required: true }]}
+      >
+        <Input />
+      </Form.Item>
       <Divider />
       <Form.Item noStyle>
         <div style={{ textAlign: "right" }}>

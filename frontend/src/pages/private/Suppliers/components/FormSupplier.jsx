@@ -40,22 +40,10 @@ const FormSupplier = ({ formData, onSubmit }) => {
         <Input />
       </Form.Item>
       <Form.Item
-        label="Email"
-        name="email"
-        rules={[
-          {
-            pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/i,
-            message: "Invalid email format.",
-          },
-          { required: true },
-        ]}
+        label="Contact Info"
+        name="contact_info"
+        rules={[{ required: true }]}
       >
-        <Input />
-      </Form.Item>
-      <Form.Item label="Phone" name="phone" rules={[{ required: true }]}>
-        <Input />
-      </Form.Item>
-      <Form.Item label="Address" name="address" rules={[{ required: true }]}>
         <Input />
       </Form.Item>
       <Divider />

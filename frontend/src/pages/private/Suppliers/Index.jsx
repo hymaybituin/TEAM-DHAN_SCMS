@@ -19,7 +19,7 @@ function Suppliers() {
     useState(false);
 
   const [isContentLoading, setIsContentLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   const getSuppliers = async () => {
     const { data } = await http.get("/api/suppliers");
@@ -32,7 +32,7 @@ function Suppliers() {
         setIsContentLoading(true);
         await getSuppliers();
       } catch (error) {
-        setError(error);
+        setErrorMsg(error.message || "Something went wrong!");
       } finally {
         setIsContentLoading(false);
       }
@@ -41,8 +41,8 @@ function Suppliers() {
     fetchSuppliers();
   }, []);
 
-  if (error) {
-    return <ErrorContent />;
+  if (errorMsg) {
+    return <ErrorContent errorMessage={errorMsg} />;
   }
 
   const toggleFormCreateSupplierOpen = () => {
@@ -60,7 +60,7 @@ function Suppliers() {
       await http.post("/api/suppliers", { ...formData, status_id: 1 });
       await getSuppliers();
     } catch (error) {
-      setError(error);
+      setErrorMsg(error.message || "Something went wrong!");
     } finally {
       setIsContentLoading(false);
     }
@@ -73,7 +73,7 @@ function Suppliers() {
       await http.put(`/api/suppliers/${selectedSupplier.id}`, formData);
       await getSuppliers();
     } catch (error) {
-      setError(error);
+      setErrorMsg(error.message || "Something went wrong!");
     } finally {
       setIsContentLoading(false);
     }
@@ -85,7 +85,7 @@ function Suppliers() {
       await http.delete(`/api/suppliers/${supplier.id}`);
       await getSuppliers();
     } catch (error) {
-      setError(error);
+      setErrorMsg(error.message || "Something went wrong!");
     } finally {
       setIsContentLoading(false);
     }
@@ -98,16 +98,8 @@ function Suppliers() {
       ...getColumnSearchProps("name"),
     },
     {
-      title: "Email",
-      dataIndex: "email",
-    },
-    {
-      title: "Phone",
-      dataIndex: "phone",
-    },
-    {
-      title: "Address",
-      dataIndex: "address",
+      title: "Contact Info",
+      dataIndex: "contact_info",
     },
     {
       title: "Action",

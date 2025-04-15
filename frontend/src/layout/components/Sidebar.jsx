@@ -112,6 +112,24 @@ function Sidebar() {
       icon: <UnorderedListOutlined />,
       label: <Link to="/products">Products</Link>,
     },
+    {
+      key: "/suppliers",
+      icon: <InboxOutlined />,
+      label: <Link to="/suppliers">Suppliers</Link>,
+      group: "Others",
+    },
+    {
+      key: "/locations",
+      icon: <PushpinOutlined />,
+      label: <Link to="/locations">Locations</Link>,
+      group: "Others",
+    },
+    {
+      key: "/warehouses",
+      icon: <BankOutlined />,
+      label: <Link to="/warehouses">Warehouses</Link>,
+      group: "Others",
+    },
   ];
 
   const userRoleMenu = {

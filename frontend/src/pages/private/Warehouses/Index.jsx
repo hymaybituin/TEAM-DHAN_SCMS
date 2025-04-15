@@ -19,7 +19,7 @@ function Warehouses() {
     useState(false);
 
   const [isContentLoading, setIsContentLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   const getWarehouses = async () => {
     const { data } = await http.get("/api/warehouses");
@@ -32,7 +32,7 @@ function Warehouses() {
         setIsContentLoading(true);
         await getWarehouses();
       } catch (error) {
-        setError(error);
+        setErrorMsg(error.message || "Something went wrong!");
       } finally {
         setIsContentLoading(false);
       }
@@ -41,8 +41,8 @@ function Warehouses() {
     fetchWarehouses();
   }, []);
 
-  if (error) {
-    return <ErrorContent />;
+  if (errorMsg) {
+    return <ErrorContent errorMessage={errorMsg} />;
   }
 
   const toggleFormCreateWarehouseOpen = () => {
@@ -60,7 +60,7 @@ function Warehouses() {
       await http.post("/api/warehouses", { ...formData, status_id: 1 });
       await getWarehouses();
     } catch (error) {
-      setError(error);
+      setErrorMsg(error.message || "Something went wrong!");
     } finally {
       setIsContentLoading(false);
     }
@@ -73,7 +73,7 @@ function Warehouses() {
       await http.put(`/api/warehouses/${selectedWarehouse.id}`, formData);
       await getWarehouses();
     } catch (error) {
-      setError(error);
+      setErrorMsg(error.message || "Something went wrong!");
     } finally {
       setIsContentLoading(false);
     }
@@ -85,7 +85,7 @@ function Warehouses() {
       await http.delete(`/api/warehouses/${warehouse.id}`);
       await getWarehouses();
     } catch (error) {
-      setError(error);
+      setErrorMsg(error.message || "Something went wrong!");
     } finally {
       setIsContentLoading(false);
     }
@@ -156,7 +156,6 @@ function Warehouses() {
         </Row>
         <Table columns={tableColumns} dataSource={warehouses} rowKey="id" />
       </Spin>
-      f
       <Drawer
         title="Create Warehouse"
         open={isFormCreateWarehouseOpen}

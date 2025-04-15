@@ -132,30 +132,30 @@ function App() {
     //   path: "/productGroups",
     //   element: <ProductGroups />,
     // },
-    // {
-    //   title: "Suppliers",
-    //   subTitle: "supplier management",
-    //   path: "/suppliers",
-    //   element: <Suppliers />,
-    // },
+    {
+      title: "Suppliers",
+      subTitle: "supplier management",
+      path: "/suppliers",
+      element: <Suppliers />,
+    },
     // {
     //   title: "Companies",
     //   subTitle: "customer/company management",
     //   path: "/companies",
     //   element: <Companies />,
     // },
-    // {
-    //   title: "Locations",
-    //   subTitle: "product/item location management",
-    //   path: "/locations",
-    //   element: <Locations />,
-    // },
-    // {
-    //   title: "Warehouses",
-    //   subTitle: "warehouse management",
-    //   path: "/warehouses",
-    //   element: <Warehouses />,
-    // },
+    {
+      title: "Locations",
+      subTitle: "product/item location management",
+      path: "/locations",
+      element: <Locations />,
+    },
+    {
+      title: "Warehouses",
+      subTitle: "warehouse management",
+      path: "/warehouses",
+      element: <Warehouses />,
+    },
     // {
     //   title: "Ecommerce",
     //   subTitle: "place your order here",
