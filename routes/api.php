@@ -13,6 +13,7 @@ use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\ProductUnitController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\IncomingStocksController;
 use App\Http\Controllers\CalibrationRecordController;
 use App\Http\Controllers\MaintenanceRecordController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -51,6 +52,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('tags', TagController::class);
     Route::apiResource('productUnits', ProductUnitController::class);
+
+    Route::put('incomingStocks/update', [IncomingStocksController::class, 'updateIncomingStock']);
 
 });
 

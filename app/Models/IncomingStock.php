@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,6 +21,7 @@ class IncomingStock extends Model
         'updated_by_user_id',
     ];
 
+    // ✅ Relationships
     public function purchaseOrderItem()
     {
         return $this->belongsTo(PurchaseOrderItem::class);
@@ -39,12 +41,26 @@ class IncomingStock extends Model
     {
         return $this->belongsTo(User::class, 'updated_by_user_id');
     }
+
     public function maintenanceRecords()
     {
         return $this->hasMany(MaintenanceRecord::class, 'incoming_stock_id');
     }
+
     public function calibrationRecords()
     {
         return $this->hasMany(CalibrationRecord::class, 'incoming_stock_id');
+    }
+
+    // ✅ Scope for Barcode Filtering
+    public function scopeByBarcodes($query, array $barcodes)
+    {
+        return $query->whereIn('barcode', $barcodes);
+    }
+
+    // ✅ Bulk Update Function (Update by Barcode)
+    public static function updateByBarcodes(array $barcodes, array $data)
+    {
+        return self::whereIn('barcode', $barcodes)->update($data);
     }
 }
