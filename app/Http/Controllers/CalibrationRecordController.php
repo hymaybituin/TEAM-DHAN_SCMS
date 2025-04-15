@@ -47,9 +47,10 @@ class CalibrationRecordController extends Controller
             return response()->json(['error' => 'No stock found for the provided serial number'], 404);
         }
     
-        // Retrieve calibration records linked to the incoming stock
-        return CalibrationRecord::with([  'createdBy', 'updatedBy'])
+        // Retrieve calibration records linked to the incoming stock and order by calibration_date (desc)
+        return CalibrationRecord::with(['createdBy', 'updatedBy'])
             ->where('incoming_stock_id', $incomingStock->id)
+            ->orderBy('calibration_date', 'desc') // Sort by calibration_date in descending order
             ->get();
     }
 

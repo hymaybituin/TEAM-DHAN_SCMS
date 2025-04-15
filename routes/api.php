@@ -6,6 +6,9 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\BarcodeController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\LocationController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\CalibrationRecordController;
@@ -28,8 +31,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('createPurchaseOrder', [PurchaseOrderController::class, 'createPurchaseOrder']);
     Route::put('purchaseOrders/{id}/status', [PurchaseOrderController::class, 'updatePurchaseOrderStatus']);
     Route::resource('purchaseOrderItemDeliveries', PurchaseOrderItemDeliveryController::class);
-    Route::post('products', [ProductController::class, 'store']);  // Create a product
-    Route::put('products/{product}', [ProductController::class, 'update']); // Update a product
+ 
+
+    Route::apiResource('products', ProductController::class);
 
     
     Route::apiResource('calibrationRecords', CalibrationRecordController::class)->except(['show']);
@@ -37,6 +41,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('maintenanceRecords', MaintenanceRecordController::class)->except(['show']);
     Route::get('maintenanceRecords/{serial_number}', [MaintenanceRecordController::class, 'show']);
+
+
+    Route::apiResource('suppliers', SupplierController::class);
+    Route::apiResource('locations', LocationController::class);
+    Route::apiResource('warehouses', WarehouseController::class);
 
 });
 

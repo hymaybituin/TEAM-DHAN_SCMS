@@ -10,6 +10,7 @@ class MaintenanceRecord extends Model
     protected $fillable = [
         'incoming_stock_id',
         'maintenance_date',
+        'next_maintenance_date',
         'description',
         'performed_by',
         'created_by',

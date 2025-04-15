@@ -308,17 +308,18 @@ class ProductController extends Controller
             'supplier_price' => 'required|numeric|min:0',
             'location_id' => 'nullable|exists:locations,id',
             'warehouse_id' => 'nullable|exists:warehouses,id',
+            'is_machine' => 'required|boolean', // Ensure machine flag is properly validated
         ]);
-
-        // Automatically assign logged-in user
+    
+        // Assign logged-in user
         $validatedData['created_by'] = auth()->id();
         $validatedData['updated_by'] = auth()->id();
-
+    
         // Set default status_id
         $validatedData['status_id'] = 1;
-
+    
         $product = Product::create($validatedData);
-
+    
         return response()->json([
             'message' => 'Product successfully created',
             'product' => $product
@@ -358,14 +359,14 @@ class ProductController extends Controller
             'supplier_price' => 'sometimes|required|numeric|min:0',
             'location_id' => 'nullable|exists:locations,id',
             'warehouse_id' => 'nullable|exists:warehouses,id',
+            'is_machine' => 'sometimes|required|boolean', // Validate the is_machine field
+            'status_id' => 'sometimes|required|exists:statuses,id', // Allow updating status_id explicitly
         ]);
     
         // Automatically set updated_by to the logged-in user
         $validatedData['updated_by'] = auth()->id();
     
-        // Ensure status_id is always 1
-        $validatedData['status_id'] = 1;
-    
+        // Update the product record
         $product->update($validatedData);
     
         return response()->json([

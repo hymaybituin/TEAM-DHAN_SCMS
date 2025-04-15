@@ -7,44 +7,55 @@ use Illuminate\Http\Request;
 
 class WarehouseController extends Controller
 {
+    // Retrieve all warehouses with related entities
     public function index()
     {
         return Warehouse::with(['creator', 'updater'])->get();
     }
 
+    // Store a new warehouse
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required',
-            'address' => 'required',
-            'created_by' => 'required|exists:users,id',
-            'updated_by' => 'required|exists:users,id',
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'address' => 'required|string',
         ]);
 
-        return Warehouse::create($request->all());
+        // Assign created_by and updated_by based on logged-in user
+        $validatedData['created_by'] = auth()->id();
+        $validatedData['updated_by'] = auth()->id();
+
+        return Warehouse::create($validatedData);
     }
 
+    // Retrieve a specific warehouse by ID
     public function show($id)
     {
         return Warehouse::with(['creator', 'updater'])->findOrFail($id);
     }
 
+    // Update an existing warehouse
     public function update(Request $request, $id)
     {
         $warehouse = Warehouse::findOrFail($id);
 
-        $request->validate([
-            'name' => 'sometimes|required',
-            'address' => 'sometimes|required',
-            'created_by' => 'sometimes|required|exists:users,id',
-            'updated_by' => 'sometimes|required|exists:users,id',
+        $validatedData = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'address' => 'sometimes|required|string',
         ]);
 
-        $warehouse->update($request->all());
+        // Automatically update 'updated_by' with the logged-in user ID
+        $validatedData['updated_by'] = auth()->id();
 
-        return $warehouse;
+        $warehouse->update($validatedData);
+
+        return response()->json([
+            'message' => 'Warehouse successfully updated',
+            'warehouse' => $warehouse
+        ]);
     }
 
+    // Delete a specific warehouse by ID
     public function destroy($id)
     {
         $warehouse = Warehouse::findOrFail($id);

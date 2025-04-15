@@ -7,44 +7,55 @@ use Illuminate\Http\Request;
 
 class SupplierController extends Controller
 {
+    // Retrieve all suppliers with related entities
     public function index()
     {
         return Supplier::with(['creator', 'updater'])->get();
     }
 
+    // Store a new supplier
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required',
-            'contact_info' => 'required',
-            'created_by' => 'required|exists:users,id',
-            'updated_by' => 'required|exists:users,id',
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'contact_info' => 'required|string',
         ]);
 
-        return Supplier::create($request->all());
+        // Assign created_by and updated_by based on logged-in user
+        $validatedData['created_by'] = auth()->id();
+        $validatedData['updated_by'] = auth()->id();
+
+        return Supplier::create($validatedData);
     }
 
+    // Retrieve a specific supplier by ID
     public function show($id)
     {
         return Supplier::with(['creator', 'updater'])->findOrFail($id);
     }
 
+    // Update an existing supplier
     public function update(Request $request, $id)
     {
         $supplier = Supplier::findOrFail($id);
 
-        $request->validate([
-            'name' => 'sometimes|required',
-            'contact_info' => 'sometimes|required',
-            'created_by' => 'sometimes|required|exists:users,id',
-            'updated_by' => 'sometimes|required|exists:users,id',
+        $validatedData = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'contact_info' => 'sometimes|required|string',
         ]);
 
-        $supplier->update($request->all());
+        // Automatically update 'updated_by' with the logged-in user ID
+        $validatedData['updated_by'] = auth()->id();
 
-        return $supplier;
+        $supplier->update($validatedData);
+
+        return response()->json([
+            'message' => 'Supplier successfully updated',
+            'supplier' => $supplier
+        ]);
     }
 
+    // Delete a specific supplier by ID
     public function destroy($id)
     {
         $supplier = Supplier::findOrFail($id);

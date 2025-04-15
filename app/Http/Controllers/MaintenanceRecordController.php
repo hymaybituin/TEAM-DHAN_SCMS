@@ -51,8 +51,9 @@ class MaintenanceRecordController extends Controller
             return response()->json(['error' => 'No stock found for the provided serial number'], 404);
         }
 
-        return MaintenanceRecord::with([ 'createdBy', 'updatedBy'])
+        return MaintenanceRecord::with(['createdBy', 'updatedBy'])
             ->where('incoming_stock_id', $incomingStock->id)
+            ->orderBy('maintenance_date', 'desc') // Sort by maintenance_date in descending order
             ->get();
     }
 
