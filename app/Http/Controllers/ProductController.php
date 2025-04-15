@@ -297,29 +297,34 @@ class ProductController extends Controller
     {
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|max:100|unique:products,sku',
             'model' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'product_unit_id' => 'required|exists:product_units,id',
             'minimum_quantity' => 'required|integer|min:0',
             'profit_margin' => 'required|numeric|min:0|max:100',
-            'image_url' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validate image upload
             'supplier_id' => 'nullable|exists:suppliers,id',
             'supplier_price' => 'required|numeric|min:0',
             'location_id' => 'nullable|exists:locations,id',
             'warehouse_id' => 'nullable|exists:warehouses,id',
-            'is_machine' => 'required|boolean', // Ensure machine flag is properly validated
+            'is_machine' => 'required|boolean',
         ]);
-    
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('products', 'public'); // Save in storage/app/public/products
+            $validatedData['image_url'] = asset("storage/{$imagePath}"); // Generate accessible URL
+        }
+
         // Assign logged-in user
         $validatedData['created_by'] = auth()->id();
         $validatedData['updated_by'] = auth()->id();
-    
+
         // Set default status_id
         $validatedData['status_id'] = 1;
-    
+
         $product = Product::create($validatedData);
-    
+
         return response()->json([
             'message' => 'Product successfully created',
             'product' => $product
@@ -348,27 +353,32 @@ class ProductController extends Controller
     {
         $validatedData = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'sku' => 'sometimes|required|string|max:100|unique:products,sku,' . $product->id,
             'model' => 'nullable|string|max:255',
             'description' => 'sometimes|required|string',
             'product_unit_id' => 'sometimes|required|exists:product_units,id',
             'minimum_quantity' => 'sometimes|required|integer|min:0',
             'profit_margin' => 'sometimes|required|numeric|min:0|max:100',
-            'image_url' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Image validation
             'supplier_id' => 'nullable|exists:suppliers,id',
             'supplier_price' => 'sometimes|required|numeric|min:0',
             'location_id' => 'nullable|exists:locations,id',
             'warehouse_id' => 'nullable|exists:warehouses,id',
-            'is_machine' => 'sometimes|required|boolean', // Validate the is_machine field
-            'status_id' => 'sometimes|required|exists:statuses,id', // Allow updating status_id explicitly
+            'is_machine' => 'sometimes|required|boolean', 
+            'status_id' => 'sometimes|required|exists:statuses,id', 
         ]);
-    
+
+        // Handle image upload if a new image is provided
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('products', 'public'); // Store image in storage/app/public/products
+            $validatedData['image_url'] = asset("storage/{$imagePath}"); // Store accessible image URL
+        }
+
         // Automatically set updated_by to the logged-in user
         $validatedData['updated_by'] = auth()->id();
-    
+
         // Update the product record
         $product->update($validatedData);
-    
+
         return response()->json([
             'message' => 'Product successfully updated',
             'product' => $product

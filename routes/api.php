@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TagController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\BarcodeController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\WarehouseController;
+use App\Http\Controllers\ProductUnitController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\CalibrationRecordController;
@@ -46,6 +48,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('suppliers', SupplierController::class);
     Route::apiResource('locations', LocationController::class);
     Route::apiResource('warehouses', WarehouseController::class);
+
+    Route::apiResource('tags', TagController::class);
+    Route::apiResource('productUnits', ProductUnitController::class);
 
 });
 
