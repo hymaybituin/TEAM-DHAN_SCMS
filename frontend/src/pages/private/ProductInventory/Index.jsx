@@ -21,6 +21,7 @@ import {
   EnvironmentTwoTone,
   ExclamationCircleOutlined,
   WarningOutlined,
+  IdcardOutlined,
 } from "@ant-design/icons";
 
 import ErrorContent from "../../../components/common/ErrorContent";
@@ -127,7 +128,11 @@ function ProductInventory() {
       <Card style={{ marginBottom: 16 }}>
         <Row gutter={16}>
           <Col>
-            <Image width={120} src={"https://placehold.co/120x120"} />
+            <Image
+              width={120}
+              height={120}
+              src={product.image_url || "https://placehold.co/120x120"}
+            />
           </Col>
           <Col>
             <Title level={3} style={{ margin: 0 }}>
@@ -135,6 +140,11 @@ function ProductInventory() {
             </Title>
             <div style={{ marginTop: 3 }}>
               <Text type="secondary">{product.description}</Text>
+            </div>
+            <div style={{ marginTop: 3 }}>
+              <Text type="secondary">
+                <IdcardOutlined /> {product.supplier.name}
+              </Text>
             </div>
             <div style={{ marginTop: 3 }}>
               <Text type="secondary">

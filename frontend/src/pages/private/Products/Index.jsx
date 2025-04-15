@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Spin,
   Row,
@@ -34,11 +35,16 @@ const { Text } = Typography;
 
 function Products() {
   const [products, setProducts] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [productUnits, setProductUnits] = useState([]);
+  const [tags, setTags] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [warehouses, setWarehouses] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedProductType, setSelectedProductType] = useState("Consumables");
 
-  const [isProductInventoryModalOpen, setIsProductInventoryModalOpen] =
-    useState(null);
+  const [isFormCreateProductOpen, setIsFormCreateProductOpen] = useState(false);
+  const [isFormUpdateProductOpen, setIsFormUpdateProductOpen] = useState(false);
 
   const [isContentLoading, setIsContentLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -53,7 +59,19 @@ function Products() {
     const fetchProducts = async () => {
       try {
         setIsContentLoading(true);
+
+        const { data: suppliers } = await http.get("/api/suppliers");
+        const { data: productUnits } = await http.get("/api/productUnits");
+        const { data: tags } = await http.get("/api/tags");
+        const { data: locations } = await http.get("/api/locations");
+        const { data: warehouses } = await http.get("/api/warehouses");
         await getProducts();
+
+        setSuppliers(suppliers);
+        setProductUnits(productUnits);
+        setTags(tags);
+        setLocations(locations);
+        setWarehouses(warehouses);
       } catch (error) {
         setErrorMsg(error.message || "Something went wrong!");
       } finally {
@@ -68,9 +86,51 @@ function Products() {
     return <ErrorContent errorMessage={errorMsg} />;
   }
 
-  const toggleProductInventoryModelOpen = () => {
-    setIsProductInventoryModalOpen(!isProductInventoryModalOpen);
-    // setIsFormCreateProductOpen(!isFormCreateProductOpen);
+  const toggleFormCreateProductOpen = () => {
+    setIsFormCreateProductOpen(!isFormCreateProductOpen);
+  };
+
+  const toggleFormUpdateProductOpen = () => {
+    setIsFormUpdateProductOpen(!isFormUpdateProductOpen);
+  };
+
+  const handleFormCreateProductSubmit = async (formData) => {
+    try {
+      toggleFormCreateProductOpen();
+      setIsContentLoading(true);
+      await http.post("/api/products", formData);
+      //await getProducts();
+    } catch (error) {
+      setError(error);
+    } finally {
+      setIsContentLoading(false);
+    }
+  };
+
+  const handleFormUpdateProductSubmit = async (formData) => {
+    try {
+      toggleFormUpdateProductOpen();
+      setIsContentLoading(true);
+      formData.append("_method", "PUT");
+      await http.post(`/api/products/${selectedProduct.id}`, formData);
+      await getProducts();
+    } catch (error) {
+      setError(error);
+    } finally {
+      setIsContentLoading(false);
+    }
+  };
+
+  const handleDeleteProduct = async (product) => {
+    try {
+      setIsContentLoading(true);
+      await http.delete(`/api/products/${product.id}`);
+      await getProducts();
+    } catch (error) {
+      setError(error);
+    } finally {
+      setIsContentLoading(false);
+    }
   };
 
   const tableColumns = [
@@ -78,7 +138,13 @@ function Products() {
       title: "",
       dataIndex: "image_url",
       render: (text) => {
-        return <Image width={50} src={"https://placehold.co/50x50"} />;
+        return (
+          <Image
+            height={50}
+            width={50}
+            src={text || "https://placehold.co/50x50"}
+          />
+        );
       },
       width: 100,
     },
@@ -88,9 +154,16 @@ function Products() {
       ...getColumnSearchProps("name"),
       render: (_, record) => {
         return (
-          <>
+          <Link
+            to={`/products/${record.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <div>
               {record.name} &mdash; {record.model}{" "}
+            </div>
+            <div>
+              <Text type="secondary">{record.supplier.name}</Text>
             </div>
             <div>
               <Text type="secondary">
@@ -98,7 +171,7 @@ function Products() {
                 {record.location.name}
               </Text>
             </div>
-          </>
+          </Link>
         );
       },
     },
@@ -210,18 +283,17 @@ function Products() {
           { key: "Delete", label: "Delete", danger: true },
         ];
 
-        const handleMenuClick = ({ key }) => {
+        const handleMenuClick = ({ key, domEvent }) => {
+          domEvent.stopPropagation();
           if (key === "View") {
             window.open(
               `/products/${record.id}`,
               "_blank",
               "noopener,noreferrer"
             );
-            // setSelectedProduct(record);
-            // toggleFormUpdateProductOpen();
           } else if (key === "Update") {
-            // setSelectedProduct(record);
-            // toggleFormUpdateProductOpen();
+            setSelectedProduct(record);
+            toggleFormUpdateProductOpen();
           } else if (key === "Delete") {
             // Modal.confirm({
             //   title: "Delete Product",
@@ -366,13 +438,14 @@ function Products() {
             />
           </Col>
           <Col>
-            <Button type="primary" onClick={toggleProductInventoryModelOpen}>
+            <Button type="primary" onClick={toggleFormCreateProductOpen}>
               Create Product
             </Button>
           </Col>
         </Row>
         <Table
           rowKey="id"
+          //rowClassName="cursor-pointer"
           columns={tableColumns}
           dataSource={filteredProducts}
           expandable={{
@@ -467,17 +540,55 @@ function Products() {
               );
             },
           }}
+          // onRow={(record) => ({
+          //   onClick: (e) => {
+          //     window.open(
+          //       `/products/${record.id}`,
+          //       "_blank",
+          //       "noopener,noreferrer"
+          //     );
+          //   },
+          // })}
         />
       </Spin>
 
       <Drawer
-        title="Product Inventory"
-        open={isProductInventoryModalOpen}
+        title="Create Product"
+        open={isFormCreateProductOpen}
         destroyOnClose
         width={600}
-        onClose={toggleProductInventoryModelOpen}
+        onClose={toggleFormCreateProductOpen}
       >
-        <FormProduct />
+        <FormProduct
+          supportingData={{
+            suppliers,
+            productUnits,
+            tags,
+            locations,
+            warehouses,
+          }}
+          onSubmit={handleFormCreateProductSubmit}
+        />
+      </Drawer>
+
+      <Drawer
+        title="Update Product"
+        open={isFormUpdateProductOpen}
+        destroyOnClose
+        width={600}
+        onClose={toggleFormUpdateProductOpen}
+      >
+        <FormProduct
+          formData={selectedProduct}
+          supportingData={{
+            suppliers,
+            productUnits,
+            tags,
+            locations,
+            warehouses,
+          }}
+          onSubmit={handleFormUpdateProductSubmit}
+        />
       </Drawer>
     </>
   );

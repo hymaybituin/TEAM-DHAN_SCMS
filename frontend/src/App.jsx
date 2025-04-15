@@ -25,6 +25,8 @@ import Suppliers from "./pages/private/Suppliers/Index.jsx";
 import Companies from "./pages/private/Companies/Index.jsx";
 import Locations from "./pages/private/Locations/Index.jsx";
 import Warehouses from "./pages/private/Warehouses/Index.jsx";
+import ProductUnits from "./pages/private/ProductUnits/Index.jsx";
+import Tags from "./pages/private/Tags/Index.jsx";
 
 import Reports from "./pages/private/Reports/Index.jsx";
 import Users from "./pages/private/Users/Index.jsx";
@@ -155,6 +157,18 @@ function App() {
       subTitle: "warehouse management",
       path: "/warehouses",
       element: <Warehouses />,
+    },
+    {
+      title: "Product Units",
+      subTitle: "product unit management",
+      path: "/productUnits",
+      element: <ProductUnits />,
+    },
+    {
+      title: "Tags",
+      subTitle: "product tags unit management",
+      path: "/tags",
+      element: <Tags />,
     },
     // {
     //   title: "Ecommerce",

@@ -8,28 +8,42 @@ import {
   Divider,
   Alert,
   Upload,
+  Checkbox,
 } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 
 const FormProduct = ({ formData, supportingData, onSubmit }) => {
-  const [inventoryMovement, setInventoryMovement] = useState(null);
-
   const [formProductInstance] = Form.useForm();
+
+  const [fileList, setFileList] = useState([]);
 
   useEffect(() => {
     if (formData) {
-      formProductInstance.setFieldsValue(formData);
-      setInventoryMovement(formData.inventory_movement);
+      formProductInstance.setFieldsValue({
+        ...formData,
+        tag_id: formData.tags.map((tag) => tag.id),
+      });
+
+      if (formData.image_url) {
+        setFileList([
+          {
+            uid: "1", // Unique identifier
+            name: "product_image.png", // File name
+            status: "done", // Upload status (e.g., 'done', 'uploading', 'error')
+            url: formData.image_url, // File URL
+          },
+        ]);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData]);
 
   const handleFormValuesChange = (changedValues) => {
-    const fieldName = Object.keys(changedValues)[0];
-    const fieldValue = changedValues[fieldName];
-    if (fieldName === "inventory_movement") {
-      setInventoryMovement(fieldValue);
-    }
+    // const fieldName = Object.keys(changedValues)[0];
+    // const fieldValue = changedValues[fieldName];
+    // if (fieldName === "inventory_movement") {
+    //   setInventoryMovement(fieldValue);
+    // }
   };
 
   const handleFormFinish = (values) => {
@@ -40,20 +54,34 @@ const FormProduct = ({ formData, supportingData, onSubmit }) => {
       }
     }
 
-    const defaultValues = {
-      name: null,
-      description: null,
-      product_category_id: null,
-      product_group_id: null,
-      available_qty: null,
-      minimum_qty: null,
-      purchase_order_id: null,
-      product_id: null,
-      inventory_movement: null,
-      selling_price: null,
-    };
+    const formData = new FormData();
+    formData.append("name", values.name);
+    formData.append("model", values.model);
+    formData.append("description", values.description);
+    formData.append("product_unit_id", values.product_unit_id);
+    formData.append("minimum_quantity", values.minimum_quantity);
+    formData.append("supplier_id", values.supplier_id);
+    formData.append("supplier_price", values.supplier_price);
+    formData.append("profit_margin", values.profit_margin);
+    formData.append("tag_id", values.tag_id);
+    formData.append("location_id", values.location_id);
+    formData.append("warehouse_id", values.warehouse_id);
+    formData.append("is_machine", values.is_machine);
+    if (fileList.length == 0) {
+      formData.append("image", null);
+    } else {
+      fileList.forEach((file) => {
+        formData.append("image", file.originFileObj);
+      });
+    }
 
-    onSubmit({ ...defaultValues, ...values });
+    console.log(formData);
+
+    onSubmit(formData);
+  };
+
+  const handleUploadChange = ({ fileList }) => {
+    setFileList(fileList);
   };
 
   const layout = {
@@ -61,16 +89,8 @@ const FormProduct = ({ formData, supportingData, onSubmit }) => {
     wrapperCol: { span: 16 },
   };
 
-  const { productCategories, productGroups, products, purchaseOrders } =
+  const { suppliers, productUnits, tags, locations, warehouses } =
     supportingData;
-
-  const inventoryMovementDescriptions = {
-    None: "None inventory movement means no inventory activity will occur. This is useful when you are about to create a new product.",
-    "Initial Balance":
-      "Initial balance means that the product will have an initial quantity of stocks. This is useful when you are about to create a new product and you want to have an initial quantity of stocks.",
-    "Purchase Order":
-      "Reference to purchase order means that the product will create a product item and it will reference to a purchase order. This is useful when you need to split the same items quantity, for example, due to expiration dates.",
-  };
 
   return (
     <Form
@@ -80,147 +100,129 @@ const FormProduct = ({ formData, supportingData, onSubmit }) => {
         required: "This is required.",
       }}
       initialValues={{
-        available_qty: 0,
+        minimum_quantity: 0,
+        is_machine: false,
       }}
       onValuesChange={handleFormValuesChange}
       onFinish={handleFormFinish}
     >
       <Form.Item
-        label="Inventory Movement"
-        name="inventory_movement"
+        name="is_machine"
+        valuePropName="checked"
+        label={null}
+        rules={[{ required: true }]}
+        defaultValue=""
+      >
+        <Checkbox disabled={formData}>Product is a Machine</Checkbox>
+      </Form.Item>
+      <Form.Item label="Image Url" name="img_url">
+        <Upload
+          beforeUpload={() => false} // Prevent immediate upload
+          fileList={fileList}
+          // listType="picture-card"
+          onChange={handleUploadChange}
+          maxCount={1}
+        >
+          <Button>Click to Upload</Button>
+        </Upload>
+      </Form.Item>
+      <Form.Item label="Name" name="name" rules={[{ required: true }]}>
+        <Input />
+      </Form.Item>
+      <Form.Item label="Model" name="model" rules={[{ required: true }]}>
+        <Input />
+      </Form.Item>
+      <Form.Item
+        label="Description"
+        name="description"
+        rules={[{ required: true }]}
+      >
+        <Input />
+      </Form.Item>
+      <Form.Item
+        label="Product Unit"
+        name="product_unit_id"
         rules={[{ required: true }]}
       >
         <Select
-          options={[
-            { value: "None", label: "None" },
-            { value: "Initial Balance", label: "Initial Balance" },
-            {
-              value: "Purchase Order",
-              label: "Reference to Purchase Order",
-            },
-          ]}
+          options={productUnits.map((productUnit) => ({
+            value: productUnit.id,
+            label: productUnit.name,
+          }))}
         />
       </Form.Item>
-      {inventoryMovement && (
-        <Form.Item
-          wrapperCol={{
-            offset: layout.labelCol.span,
-            span: layout.wrapperCol.span,
-          }}
-        >
-          <Alert
-            message={`${inventoryMovement} Inventory Movement`}
-            description={inventoryMovementDescriptions[inventoryMovement]}
-            showIcon
-          />
-        </Form.Item>
-      )}
-      {inventoryMovement !== "Purchase Order" && (
-        <>
-          <Form.Item
-            label="Image Url"
-            name="img_url"
-            rules={[{ required: true }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item label="Name" name="name" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Description"
-            name="description"
-            rules={[{ required: true }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Group"
-            name="product_group_id"
-            rules={[{ required: true }]}
-          >
-            <Select
-              options={productGroups.map((pC) => ({
-                value: pC.id,
-                label: pC.name,
-              }))}
-            />
-          </Form.Item>
-          <Form.Item
-            label="Category"
-            name="product_category_id"
-            rules={[{ required: true }]}
-          >
-            <Select
-              options={productCategories.map((pC) => ({
-                value: pC.id,
-                label: pC.name,
-              }))}
-            />
-          </Form.Item>
-          <Form.Item
-            label="Available Qty."
-            name="available_qty"
-            rules={[{ required: true }]}
-          >
-            <InputNumber
-              disabled={
-                inventoryMovement === "None" ||
-                inventoryMovement === "Purchase Order"
-              }
-            />
-          </Form.Item>
-          <Form.Item
-            label="Minimum Qty."
-            name="minimum_qty"
-            rules={[{ required: true }]}
-          >
-            <InputNumber />
-          </Form.Item>
-          <Form.Item
-            label="Selling Price"
-            name="selling_price"
-            rules={[{ required: true }]}
-          >
-            <InputNumber
-              formatter={(value) =>
-                `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-              }
-              parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
-            />
-          </Form.Item>
-        </>
-      )}
-      {inventoryMovement === "Purchase Order" && (
-        <>
-          <Form.Item
-            label="Purchase Order Number"
-            name="purchase_order_id"
-            rules={[{ required: true }]}
-          >
-            <Select
-              showSearch
-              options={purchaseOrders.map((pO) => ({
-                value: pO.id,
-                label: pO.id,
-              }))}
-            />
-          </Form.Item>
-          <Form.Item
-            label="Product"
-            name="product_id"
-            rules={[{ required: true }]}
-          >
-            <Select
-              showSearch
-              options={products.map((p) => ({
-                value: p.id,
-                label: p.name,
-              }))}
-            />
-          </Form.Item>
-        </>
-      )}
+      <Form.Item
+        label="Minimum Qty."
+        name="minimum_quantity"
+        rules={[{ required: true }]}
+      >
+        <InputNumber />
+      </Form.Item>
+      <Form.Item
+        label="Supplier"
+        name="supplier_id"
+        rules={[{ required: true }]}
+      >
+        <Select
+          options={suppliers.map((supplier) => ({
+            value: supplier.id,
+            label: supplier.name,
+          }))}
+        />
+      </Form.Item>
+      <Form.Item
+        label="Supplier Price"
+        name="supplier_price"
+        rules={[{ required: true }]}
+      >
+        <InputNumber
+          formatter={(value) =>
+            `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+          }
+          parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
+        />
+      </Form.Item>
+      <Form.Item
+        label="Profit Margin (%)"
+        name="profit_margin"
+        rules={[{ required: true }]}
+      >
+        <InputNumber />
+      </Form.Item>
+      <Form.Item
+        label="Location"
+        name="location_id"
+        rules={[{ required: true }]}
+      >
+        <Select
+          options={locations.map((location) => ({
+            value: location.id,
+            label: location.name,
+          }))}
+        />
+      </Form.Item>
+      <Form.Item
+        label="Warehouse"
+        name="warehouse_id"
+        rules={[{ required: true }]}
+      >
+        <Select
+          options={warehouses.map((warehouse) => ({
+            value: warehouse.id,
+            label: warehouse.name,
+          }))}
+        />
+      </Form.Item>
+      <Form.Item label="Tags" name="tag_id">
+        <Select
+          mode="multiple"
+          options={tags.map((tag) => ({
+            value: tag.id,
+            label: tag.name,
+          }))}
+        />
+      </Form.Item>
+
       <Divider />
       <Form.Item noStyle>
         <div style={{ textAlign: "right" }}>

@@ -15,6 +15,8 @@ import {
   MenuOutlined,
   GroupOutlined,
   DatabaseOutlined,
+  CalculatorOutlined,
+  TagsOutlined,
 } from "@ant-design/icons";
 
 import useAppStore from "../../store/AppStore";
@@ -130,6 +132,18 @@ function Sidebar() {
       label: <Link to="/warehouses">Warehouses</Link>,
       group: "Others",
     },
+    {
+      key: "/productUnits",
+      icon: <CalculatorOutlined />,
+      label: <Link to="/productUnits">Product Units</Link>,
+      group: "Others",
+    },
+    {
+      key: "/tags",
+      icon: <TagsOutlined />,
+      label: <Link to="/tags">Tags</Link>,
+      group: "Others",
+    },
   ];
 
   const userRoleMenu = {
@@ -146,6 +160,8 @@ function Sidebar() {
       "/companies",
       "/locations",
       "/warehouses",
+      "/productUnits",
+      "/tags",
     ],
     Customer: ["/ecommerce", "/customerOrders"],
     Sales: ["/dashboard", "/orders"],
