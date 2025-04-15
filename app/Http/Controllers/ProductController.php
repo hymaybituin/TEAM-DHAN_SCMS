@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Models\PurchaseOrder;
 use App\Models\SupplierProduct;
 use App\Models\PurchaseOrderItem;
+use Illuminate\Http\UploadedFile;
 
 class ProductController extends Controller
 {
@@ -146,22 +147,19 @@ class ProductController extends Controller
         return response()->json($productTypes);
     }*/
 
-
-   
-
-    public function getAllProducts($productId = null)  
-    {  
-        $query = Product::with([  
-            'productUnit',  
-            'supplier',  
-            'location',  
-            'warehouse',  
-            'status',  
-            'creator',  
-            'updater',  
-            'tags',  
-            'incomingStocks.calibrationRecords',  
-            'incomingStocks.maintenanceRecords'  
+    public function getAllProducts($productId = null)
+    {
+        $query = Product::with([
+            'productUnit',
+            'supplier',
+            'location',
+            'warehouse',
+            'status',
+            'creator',
+            'updater',
+            'tags',
+            'incomingStocks.calibrationRecords',
+            'incomingStocks.maintenanceRecords'
         ]);
 
         // If productId is provided, filter the query
@@ -169,112 +167,81 @@ class ProductController extends Controller
             $query->where('id', $productId);
         }
 
-        $products = $query->get()  
-            ->map(function ($product) {  
-                $availableQuantity = $product->incomingStocks  
-                    ->filter(fn($stock) => is_null($stock->expiration_date) || !Carbon::parse($stock->expiration_date)->isPast())  
-                    ->sum('quantity');  
+        $products = $query->get()
+            ->map(function ($product) {
+                $availableQuantity = $product->incomingStocks
+                    ->filter(fn($stock) => is_null($stock->expiration_date) || !Carbon::parse($stock->expiration_date)->isPast())
+                    ->sum('quantity');
 
-                if ($product->incomingStocks->isNotEmpty()) {  
-                    $groupedStocks = $product->incomingStocks  
-                        ->groupBy(fn($stock) => implode('|', [  
-                            $stock->purchase_order_item_id,  
-                            $stock->serial_number ?? 'NULL',  
-                            $stock->lot_number ?? 'NULL',  
-                            $stock->expiration_date ?? 'NULL',  
-                            $stock->product_id  
-                        ]))  
-                        ->map(function ($stocks) use ($product) {  
-                            $firstStock = $stocks->first();  
-                            $remainingTimeString = null;  
-                            $status = 'In Stock';  
-                            $quantity = 0;  
+                if ($product->incomingStocks->isNotEmpty()) {
+                    $groupedStocks = $product->incomingStocks
+                        ->groupBy(fn($stock) => implode('|', [
+                            $stock->purchase_order_item_id,
+                            $stock->serial_number ?? 'NULL',
+                            $stock->lot_number ?? 'NULL',
+                            $stock->expiration_date ?? 'NULL',
+                            $stock->product_id
+                        ]))
+                        ->map(function ($stocks) use ($product) {
+                            $firstStock = $stocks->first();
+                            $remainingTimeString = null;
+                            $status = 'In Stock';
+                            $quantity = 0;
 
-                            if (!$product->is_machine) {  
-                                if (is_null($firstStock->lot_number) || is_null($firstStock->expiration_date)) {  
-                                    $status = 'INSTOCK';  
-                                    $quantity = $stocks->sum('quantity');  
-                                } else {  
-                                    $expirationDate = Carbon::parse($firstStock->expiration_date);  
-                                    $today = Carbon::today();  
-                                    $remainingTime = $today->diff($expirationDate);  
+                            if (!$product->is_machine) {
+                                if (is_null($firstStock->lot_number) || is_null($firstStock->expiration_date)) {
+                                    $status = 'INSTOCK';
+                                    $quantity = $stocks->sum('quantity');
+                                } else {
+                                    $expirationDate = Carbon::parse($firstStock->expiration_date);
+                                    $today = Carbon::today();
+                                    $remainingTime = $today->diff($expirationDate);
 
-                                    if ($expirationDate->isPast()) {  
-                                        $status = 'EXPIRED';  
-                                        $remainingTimeString = 'Expired ' . $remainingTime->y . ' Years, ' . $remainingTime->m . ' Months, and ' . $remainingTime->d . ' Days Ago';  
-                                    } elseif ($expirationDate->greaterThan($today->addMonths(3))) {  
-                                        $status = 'VIABLE';  
-                                        $remainingTimeString = 'Expires in ' . $remainingTime->y . ' Years, ' . $remainingTime->m . ' Months, and ' . $remainingTime->d . ' Days';  
-                                    } else {  
-                                        $status = 'EXPIRING';  
-                                        $remainingTimeString = 'Expiring in ' . $remainingTime->m . ' Months and ' . $remainingTime->d . ' Days';  
-                                    }  
-                                    $quantity = $stocks->sum('quantity');  
-                                }  
-                            }  
+                                    if ($expirationDate->isPast()) {
+                                        $status = 'EXPIRED';
+                                        $remainingTimeString = 'Expired ' . $remainingTime->y . ' Years, ' . $remainingTime->m . ' Months, and ' . $remainingTime->d . ' Days Ago';
+                                    } elseif ($expirationDate->greaterThan($today->addMonths(3))) {
+                                        $status = 'VIABLE';
+                                        $remainingTimeString = 'Expires in ' . $remainingTime->y . ' Years, ' . $remainingTime->m . ' Months, and ' . $remainingTime->d . ' Days';
+                                    } else {
+                                        $status = 'EXPIRING';
+                                        $remainingTimeString = 'Expiring in ' . $remainingTime->m . ' Months and ' . $remainingTime->d . ' Days';
+                                    }
+                                    $quantity = $stocks->sum('quantity');
+                                }
+                            }
 
-                            // Retrieve and sort calibration and maintenance records by date (latest first)
-                            $calibrationRecords = $firstStock->calibrationRecords
-                                ->sortByDesc('calibration_date')
-                                ->map(fn($record) => [
-                                    'calibration_date' => $record->calibration_date,
-                                    'calibrated_by' => $record->calibrated_by,
-                                    'calibration_notes' => $record->calibration_notes,
-                                    'calibration_status_id' => $record->calibration_status_id
-                                ])->values()->toArray();
+                            return [
+                                'purchase_order_item_id' => $firstStock->purchase_order_item_id,
+                                'serial_number' => $firstStock->serial_number,
+                                'lot_number' => $firstStock->lot_number,
+                                'expiration_date' => $firstStock->expiration_date,
+                                'product_id' => $firstStock->product_id,
+                                'quantity' => $quantity,
+                                'status' => $status,
+                                'remaining_time' => $remainingTimeString,
+                                'barcodes' => $stocks->pluck('barcode')->toArray()
+                            ];
+                        })
+                        ->values();
+                } else {
+                    $groupedStocks = collect();
+                }
 
-                            $maintenanceRecords = $firstStock->maintenanceRecords
-                                ->sortByDesc('maintenance_date')
-                                ->map(fn($record) => [
-                                    'maintenance_date' => $record->maintenance_date,
-                                    'next_maintenance_date' => $record->next_maintenance_date,
-                                    'performed_by' => $record->performed_by,
-                                    'description' => $record->description
-                                ])->values()->toArray();
+                return array_merge($product->toArray(), [
+                    'image_url' => $product->image_url ?? asset('storage/products/sell-product.svg'), // Default image if null
+                    'available_quantity' => $availableQuantity,
+                    'quantity_level' => $availableQuantity == 0
+                        ? 'No Stock'
+                        : ($availableQuantity < $product->minimum_quantity ? 'Below Minimum' : 'Above Minimum'),
+                    'default_selling_price' => number_format($product->supplier_price + ($product->supplier_price * ($product->profit_margin / 100)), 2, '.', ''),
+                    'incoming_stocks' => $groupedStocks->toArray()
+                ]);
+            });
 
-                            // Determine if calibration is needed
-                            $latestCalibration = $calibrationRecords[0] ?? null;
-                            $forCalibration = !$latestCalibration;
-
-                            // Determine if maintenance is needed
-                            $latestMaintenance = $maintenanceRecords[0] ?? null;
-                            $nextMaintenanceDate = $latestMaintenance['next_maintenance_date'] ?? null;
-                            $forMaintenance =  (Carbon::today())->diffInDays( Carbon::parse($nextMaintenanceDate)) < 30;
-
-                            
-                            return [  
-                                'purchase_order_item_id' => $firstStock->purchase_order_item_id,  
-                                'serial_number' => $firstStock->serial_number,  
-                                'lot_number' => $firstStock->lot_number,  
-                                'expiration_date' => $firstStock->expiration_date,  
-                                'product_id' => $firstStock->product_id,  
-                                'quantity' => $quantity,  
-                                'status' => $status,  
-                                'remaining_time' => $remainingTimeString,  
-                                'barcodes' => $stocks->pluck('barcode')->toArray(),  
-                                'calibration_records' => $calibrationRecords,  
-                                'for_calibration' => (bool) $forCalibration,  
-                                'maintenance_records' => $maintenanceRecords,  
-                                'for_maintenance' => (bool) $forMaintenance  
-                            ];  
-                        })  
-                        ->values();  
-                } else {  
-                    $groupedStocks = collect();  
-                }  
-
-                return array_merge($product->toArray(), [  
-                    'available_quantity' => $availableQuantity,  
-                    'quantity_level' => $availableQuantity == 0  
-                    ? 'No Stock'  
-                    : ($availableQuantity < $product->minimum_quantity ? 'Below Minimum' : 'Above Minimum'),  
-                    'default_selling_price' => number_format($product->supplier_price + ($product->supplier_price * ($product->profit_margin / 100)), 2, '.', ''),  
-                    'incoming_stocks' => $groupedStocks->toArray()  
-                ]);  
-            });  
-
-            return response()->json($productId !== null ? $products->first() : $products);
+        return response()->json($productId !== null ? $products->first() : $products);
     }
+   
 
     /**
      * Display a listing of the products.
@@ -295,6 +262,12 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
+
+        // Convert 'is_machine' to a boolean before validation
+        $request->merge([
+            'is_machine' => filter_var($request->is_machine, FILTER_VALIDATE_BOOLEAN),
+        ]);
+
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'model' => 'nullable|string|max:255',
@@ -307,7 +280,8 @@ class ProductController extends Controller
             'supplier_price' => 'required|numeric|min:0',
             'location_id' => 'nullable|exists:locations,id',
             'warehouse_id' => 'nullable|exists:warehouses,id',
-            'is_machine' => 'required|boolean',
+            'is_machine' => 'required|boolean', // Properly treated as boolean
+            'tag_id' => 'nullable|string', // Validate tag_id as a comma-separated string
         ]);
 
         // Handle image upload
@@ -323,14 +297,20 @@ class ProductController extends Controller
         // Set default status_id
         $validatedData['status_id'] = 1;
 
+        // Create product
         $product = Product::create($validatedData);
+
+        // Handle tag associations if tag_id is provided
+        if (!empty($request->tag_id)) {
+            $tagIds = explode(',', $request->tag_id); // Convert comma-separated string to array
+            $product->tags()->sync($tagIds); // Sync tags instead of attach to prevent duplicates
+        }
 
         return response()->json([
             'message' => 'Product successfully created',
             'product' => $product
         ], 201);
     }
-
     /**
      * Display the specified product.
      *
@@ -351,6 +331,13 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
+       
+
+        // Convert 'is_machine' to a boolean before validation
+        $request->merge([
+            'is_machine' => filter_var($request->is_machine, FILTER_VALIDATE_BOOLEAN),
+        ]);
+
         $validatedData = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'model' => 'nullable|string|max:255',
@@ -363,14 +350,24 @@ class ProductController extends Controller
             'supplier_price' => 'sometimes|required|numeric|min:0',
             'location_id' => 'nullable|exists:locations,id',
             'warehouse_id' => 'nullable|exists:warehouses,id',
-            'is_machine' => 'sometimes|required|boolean', 
-            'status_id' => 'sometimes|required|exists:statuses,id', 
+            'is_machine' => 'sometimes|required|boolean',
+            'status_id' => 'sometimes|required|exists:statuses,id',
+            'tag_id' => 'nullable|string', // Accepts comma-separated tag IDs
         ]);
 
         // Handle image upload if a new image is provided
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('products', 'public'); // Store image in storage/app/public/products
-            $validatedData['image_url'] = asset("storage/{$imagePath}"); // Store accessible image URL
+            // Delete old image if exists
+            if ($product->image_url) {
+                $oldImagePath = str_replace(asset('storage'), 'storage', $product->image_url);
+                if (file_exists(public_path($oldImagePath))) {
+                    unlink(public_path($oldImagePath)); // Remove old image
+                }
+            }
+
+            // Store new image
+            $imagePath = $request->file('image')->store('products', 'public');
+            $validatedData['image_url'] = asset("storage/{$imagePath}"); // Generate accessible image URL
         }
 
         // Automatically set updated_by to the logged-in user
@@ -378,6 +375,12 @@ class ProductController extends Controller
 
         // Update the product record
         $product->update($validatedData);
+
+        // Handle tag associations if tag_id is provided
+        if (!empty($request->tag_id)) {
+            $tagIds = explode(',', $request->tag_id); // Convert comma-separated string to array
+            $product->tags()->sync($tagIds); // Sync tags to prevent duplication
+        }
 
         return response()->json([
             'message' => 'Product successfully updated',

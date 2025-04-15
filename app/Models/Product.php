@@ -15,6 +15,9 @@ class Product extends Model
      *
      * @var array<int, string>
      */
+    protected $casts = [
+        'is_machine' => 'boolean',
+    ];
     protected $fillable = [
         'name',
         'sku',
