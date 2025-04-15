@@ -169,68 +169,84 @@ class ProductController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
-    {
-        // ✅ Remove `image` from validation if it's explicitly set to null
-        if ($request->input('image') === null) {
-            $request->request->remove('image'); // Prevent Laravel from treating it as a file
-        }
-    
-        // ✅ Convert 'is_machine' to a proper boolean before validation
-        $request->merge([
-            'is_machine' => filter_var($request->is_machine, FILTER_VALIDATE_BOOLEAN),
-        ]);
-    
-        // ✅ Apply conditional validation: Only validate image if it exists
-        $imageRules = $request->hasFile('image') ? 'file|image|mimes:jpeg,png,jpg,gif|max:2048' : 'nullable';
-    
-        // ✅ Validate the incoming request
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'model' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-            'product_unit_id' => 'required|exists:product_units,id',
-            'minimum_quantity' => 'required|integer|min:0',
-            'profit_margin' => 'required|numeric|min:0|max:100',
-            'image' => $imageRules, // Corrected validation rule for image
-            'supplier_id' => 'nullable|exists:suppliers,id',
-            'supplier_price' => 'required|numeric|min:0',
-            'location_id' => 'nullable|exists:locations,id',
-            'warehouse_id' => 'nullable|exists:warehouses,id',
-            'is_machine' => 'required|boolean', // Properly treated as boolean
-            'tag_id' => 'nullable|string', // Validate tag_id as a comma-separated string
-        ]);
-    
-        // ✅ Handle image upload or removal
-        if ($request->hasFile('image')) {
-            // Save new image
-            $imagePath = $request->file('image')->store('products', 'public');
-            $validatedData['image_url'] = asset("storage/{$imagePath}");
-        } elseif ($request->input('image') === null) {
-            // Remove image reference if explicitly set to null
-            $validatedData['image_url'] = null;
-        }
-    
-        // ✅ Assign logged-in user
-        $validatedData['created_by'] = auth()->id();
-        $validatedData['updated_by'] = auth()->id();
-    
-        // ✅ Set default status_id
-        $validatedData['status_id'] = 1;
-    
-        // ✅ Create product
-        $product = Product::create($validatedData);
-    
-        // ✅ Handle tag associations if tag_id is provided
-        if (!empty($request->tag_id)) {
-            $tagIds = explode(',', $request->tag_id); // Convert comma-separated string to array
-            $product->tags()->sync($tagIds); // Sync tags instead of attach to prevent duplicates
-        }
-    
-        return response()->json([
-            'message' => 'Product successfully created',
-            'product' => $product
-        ], 201);
+{
+    // ✅ Remove `image` from validation if explicitly set to null
+    if ($request->input('image') === null) {
+        $request->request->remove('image'); // Prevent Laravel from treating it as a file
     }
+
+    // ✅ Convert 'is_machine' to a proper boolean before validation
+    $request->merge([
+        'is_machine' => filter_var($request->is_machine, FILTER_VALIDATE_BOOLEAN),
+    ]);
+
+    // ✅ Apply conditional validation: Only validate image if it exists
+    $imageRules = $request->hasFile('image') ? 'file|image|mimes:jpeg,png,jpg,gif|max:2048' : 'nullable';
+
+    // ✅ Validate the incoming request
+    $validatedData = $request->validate([
+        'name' => 'required|string|max:255',
+        'model' => 'nullable|string|max:255',
+        'description' => 'nullable|string',
+        'product_unit_id' => 'required|exists:product_units,id',
+        'minimum_quantity' => 'required|integer|min:0',
+        'profit_margin' => 'required|numeric|min:0|max:100',
+        'image' => $imageRules, // Corrected validation rule for image
+        'supplier_id' => 'nullable|exists:suppliers,id',
+        'supplier_price' => 'required|numeric|min:0',
+        'location_id' => 'nullable',
+        'warehouse_id' => 'nullable',
+        'is_machine' => 'required|boolean',
+        'tag_id' => 'nullable|string', // Validate tag_id as a comma-separated string
+    ]);
+
+    // ✅ Remove `location_id` and `warehouse_id` from array if they are null
+    if ($request->location_id === 'null' || $request->location_id === '') {
+        unset($validatedData['location_id']);
+    }
+    if ($request->warehouse_id === 'null' || $request->warehouse_id === '') {
+        unset($validatedData['warehouse_id']);
+    }
+    if ($request->tag_id === 'null' || $request->tag_id === '') {
+        $request->tag_id = "";
+    }
+
+
+    // ✅ Handle image upload or removal
+    if ($request->hasFile('image')) {
+        // Save new image
+        $imagePath = $request->file('image')->store('products', 'public');
+        $validatedData['image_url'] = asset("storage/{$imagePath}");
+    } elseif ($request->input('image') === null) {
+        // Remove image reference if explicitly set to null
+        $validatedData['image_url'] = null;
+    }
+
+    // ✅ Assign logged-in user
+    $validatedData['created_by'] = auth()->id();
+    $validatedData['updated_by'] = auth()->id();
+
+    // ✅ Set default status_id
+    $validatedData['status_id'] = 1;
+
+    // ✅ Create product
+    $product = Product::create($validatedData);
+
+    // ✅ Modify Tag Handling: If `tag_id` is empty/null, delete all tags
+    if (!empty($request->tag_id)) {
+        $tagIds = explode(',', $request->tag_id);
+        $product->tags()->sync($tagIds);
+    } else {
+        // If `tag_id` is empty or null, remove all tags
+        $product->tags()->detach();
+    }
+
+
+    return response()->json([
+        'message' => 'Product successfully created',
+        'product' => $product
+    ], 201);
+}
     /**
      * Display the specified product.
      *
@@ -277,6 +293,16 @@ class ProductController extends Controller
             'status_id' => $request->input('status_id', $product->status_id),
             'updated_by' => auth()->id(),
         ];
+
+        if ($request->location_id === 'null' || $request->location_id === '') {
+            unset($validatedData['location_id']);
+        }
+        if ($request->warehouse_id === 'null' || $request->warehouse_id === '') {
+            unset($validatedData['warehouse_id']);
+        }
+        if ($request->tag_id === 'null' || $request->tag_id === '') {
+            $request->tag_id = "";
+        }
 
         // ✅ Handle Image Upload (Remove Image If `null`)
         if ($request->hasFile('image')) {
