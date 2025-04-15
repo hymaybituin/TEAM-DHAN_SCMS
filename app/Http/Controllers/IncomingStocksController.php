@@ -14,35 +14,30 @@ class IncomingStocksController extends Controller
     {
         // ✅ Validate Request
         $validatedData = $request->validate([
-            'purchase_order_item_id' => 'required|exists:incoming_stocks,purchase_order_item_id',
-            'product_id' => 'required|exists:incoming_stocks,product_id',
+            'barcodes' => 'required|array|min:1', // Ensure an array with at least one barcode
             'serial_number' => 'nullable|string|max:255',
             'lot_number' => 'nullable|string|max:255',
             'expiration_date' => 'nullable|date',
         ]);
-
-        // ✅ Find Incoming Stocks Matching Criteria
-        $incomingStocks = IncomingStock::where('purchase_order_item_id', $validatedData['purchase_order_item_id'])
-            ->where('product_id', $validatedData['product_id'])
-            ->get();
-
+    
+        // ✅ Find Incoming Stocks Matching Barcodes
+        $incomingStocks = IncomingStock::whereIn('barcode', $validatedData['barcodes'])->get();
+    
         if ($incomingStocks->isEmpty()) {
-            return response()->json(['message' => 'No matching incoming stocks found'], 404);
+            return response()->json(['message' => 'No matching incoming stocks found for the provided barcodes'], 404);
         }
-
-        // ✅ Update Fields for Each Matching Incoming Stock
-        foreach ($incomingStocks as $stock) {
-            $stock->update([
-                'serial_number' => $validatedData['serial_number'] ?? $stock->serial_number,
-                'lot_number' => $validatedData['lot_number'] ?? $stock->lot_number,
-                'expiration_date' => $validatedData['expiration_date'] ?? $stock->expiration_date,
-                'updated_by_user_id' => auth()->id(), // Track updater
-            ]);
-        }
-
+    
+        // ✅ Bulk Update Using `updateByBarcodes()` Helper Method in Model
+        IncomingStock::whereIn('barcode', $validatedData['barcodes'])->update([
+            'serial_number' => $validatedData['serial_number'] ?? null,
+            'lot_number' => $validatedData['lot_number'] ?? null,
+            'expiration_date' => $validatedData['expiration_date'] ?? null,
+            'updated_by_user_id' => auth()->id(), // Track updater
+        ]);
+    
         return response()->json([
             'message' => 'Incoming stocks updated successfully',
-            'updated_stocks' => $incomingStocks->fresh(),
+            'updated_stocks' => IncomingStock::whereIn('barcode', $validatedData['barcodes'])->get(),
         ]);
     }
 }

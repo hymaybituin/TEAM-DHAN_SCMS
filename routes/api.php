@@ -53,7 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('tags', TagController::class);
     Route::apiResource('productUnits', ProductUnitController::class);
 
-    Route::put('/incomingStocks/update', [IncomingStocksController::class, 'updateIncomingStock']);
+    Route::put('incomingStocks/update', [IncomingStocksController::class, 'updateIncomingStock']);
 
 });
 
