@@ -143,7 +143,8 @@ class ProductController extends Controller
                     'default_selling_price' => number_format($product->supplier_price + ($product->supplier_price * ($product->profit_margin / 100)), 2, '.', ''),  
                     'incoming_stocks' => $groupedStocks->toArray(),
                     'total_for_calibration' => $totalForCalibration, // ✅ Fixed Calculation
-                    'total_for_maintenance' => $totalForMaintenance // ✅ Fixed Calculation
+                    'total_for_maintenance' => $totalForMaintenance, // ✅ Fixed Calculation
+                    'total_demo_units' => 0 
                 ]);  
             });
     
@@ -250,7 +251,6 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-
         // Handle `_method=PUT` workaround
         if ($request->has('_method') && $request->_method === 'PUT') {
             $request->setMethod('PUT');
@@ -277,11 +277,9 @@ class ProductController extends Controller
             'status_id' => $request->input('status_id', $product->status_id),
             'updated_by' => auth()->id(),
         ];
-        // ✅ Handle Image Upload (Remove Image If `null`)
 
-        
+        // ✅ Handle Image Upload (Remove Image If `null`)
         if ($request->hasFile('image')) {
-         
             // Save new image
             $newImagePath = $request->file('image')->store('products', 'public');
             $validatedData['image_url'] = asset("storage/{$newImagePath}");
@@ -302,20 +300,21 @@ class ProductController extends Controller
             $validatedData['image_url'] = null; // Remove image reference from DB
         }
 
-      
-        
         // Force update to apply changes
         $product->forceFill($validatedData)->save();
 
-        // ✅ Fix: Only Sync Tags (No Need to Update `tag_id` in `products`)
+        // ✅ Modify Tag Handling: If `tag_id` is empty/null, delete all tags
         if (!empty($request->tag_id)) {
             $tagIds = explode(',', $request->tag_id);
             $product->tags()->sync($tagIds);
+        } else {
+            // If `tag_id` is empty or null, remove all tags
+            $product->tags()->detach();
         }
 
         return response()->json([
             'message' => 'Product successfully updated',
-            'product' => $product->fresh()
+            'product' => $product->fresh(),
         ]);
     }
     /**
