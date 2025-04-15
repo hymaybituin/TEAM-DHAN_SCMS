@@ -35,7 +35,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('calibrationRecords', CalibrationRecordController::class)->except(['show']);
     Route::get('calibrationRecords/{serial_number}', [CalibrationRecordController::class, 'show']);
 
-    Route::apiResource('maintenanceRecords', MaintenanceRecordController::class);
+    Route::apiResource('maintenance-records', MaintenanceRecordController::class)->except(['show']);
+    Route::get('maintenance-records/{serial_number}', [MaintenanceRecordController::class, 'show']);
 
 });
 
