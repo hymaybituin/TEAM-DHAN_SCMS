@@ -9,9 +9,11 @@ const FormMaintenance = ({ formData, onSubmit }) => {
     if (formData) {
       formMaintenanceInstance.setFieldsValue({
         ...formData,
-        date_added: formData.date_added ? dayjs(formData.date_added) : null,
-        last_updated: formData.last_updated
-          ? dayjs(formData.last_updated)
+        maintenance_date: formData.maintenance_date
+          ? dayjs(formData.maintenance_date)
+          : null,
+        next_maintenance_date: formData.next_maintenance_date
+          ? dayjs(formData.next_maintenance_date)
           : null,
       });
     }
@@ -28,14 +30,16 @@ const FormMaintenance = ({ formData, onSubmit }) => {
 
     onSubmit({
       ...values,
-      date_added: dayjs(values.date_added).format("YYYY-MM-DD"),
-      last_updated: dayjs(values.last_updated).format("YYYY-MM-DD"),
+      maintenance_date: dayjs(values.maintenance_date).format("YYYY-MM-DD"),
+      next_maintenance_date: dayjs(values.next_maintenance_date).format(
+        "YYYY-MM-DD"
+      ),
     });
   };
 
   const layout = {
-    labelCol: { span: 8 },
-    wrapperCol: { span: 16 },
+    labelCol: { span: 10 },
+    wrapperCol: { span: 14 },
   };
 
   return (
@@ -55,17 +59,25 @@ const FormMaintenance = ({ formData, onSubmit }) => {
         <DatePicker />
       </Form.Item>
       <Form.Item
-        label="Last Update"
-        name="last_updated"
+        label="Performed By"
+        name="performed_by"
+        rules={[{ required: true }]}
+      >
+        <Input />
+      </Form.Item>
+      <Form.Item
+        label="Description"
+        name="description"
+        rules={[{ required: true }]}
+      >
+        <Input />
+      </Form.Item>
+      <Form.Item
+        label="Next Maintenance Date"
+        name="next_maintenance_date"
         rules={[{ required: true }]}
       >
         <DatePicker />
-      </Form.Item>
-      <Form.Item label="Notes" name="notes" rules={[{ required: true }]}>
-        <Input />
-      </Form.Item>
-      <Form.Item label="Actual Image" name="actual_image">
-        <Input />
       </Form.Item>
       <Divider />
       <Form.Item noStyle>

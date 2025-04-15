@@ -25,7 +25,7 @@ function Maintenances({ serialNumber }) {
   const getMaintenances = async () => {
     const { data } = await http.get(`/api/maintenanceRecords/${serialNumber}`);
     console.log(data);
-    setMaintenances([]);
+    setMaintenances(data);
   };
 
   useEffect(() => {
@@ -59,11 +59,9 @@ function Maintenances({ serialNumber }) {
     try {
       toggleFormCreateMaintenanceOpen();
       setIsContentLoading(true);
-      await http.post("/api/productRecordMaintenance", {
+      await http.post("/api/maintenanceRecords", {
         ...formData,
-        product_item_equipment_id: productItemId,
-        maintenance_by_id: 1,
-        status_id: 1,
+        serial_number: serialNumber,
       });
       await getMaintenances();
     } catch (error) {
@@ -77,10 +75,10 @@ function Maintenances({ serialNumber }) {
     try {
       toggleFormUpdateMaintenanceOpen();
       setIsContentLoading(true);
-      await http.put(
-        `/api/productRecordMaintenance/${selectedMaintenance.id}`,
-        formData
-      );
+      await http.put(`/api/maintenanceRecords/${selectedMaintenance.id}`, {
+        ...formData,
+        serial_number: serialNumber,
+      });
       await getMaintenances();
     } catch (error) {
       setErrorMsg(error.message || "Something went wrong!");
@@ -92,7 +90,7 @@ function Maintenances({ serialNumber }) {
   const handleDeleteMaintenance = async (maintenance) => {
     try {
       setIsContentLoading(true);
-      await http.delete(`/api/productRecordMaintenance/${maintenance.id}`);
+      await http.delete(`/api/maintenanceRecords/${maintenance.id}`);
       await getMaintenances();
     } catch (error) {
       setErrorMsg(error.message || "Something went wrong!");
@@ -103,19 +101,33 @@ function Maintenances({ serialNumber }) {
 
   const tableColumns = [
     {
-      title: "Date Added",
-      dataIndex: "date_added",
+      title: "Maintenance Date",
+      dataIndex: "maintenance_date",
     },
 
     {
-      title: "Notes",
-      dataIndex: "notes",
+      title: "Description",
+      dataIndex: "description",
+    },
+    {
+      title: "Performed By",
+      dataIndex: "performed_by",
+    },
+    {
+      title: "Next Maintenance Date",
+      dataIndex: "next_maintenance_date",
     },
     {
       title: "Action",
       width: 50,
       render: (_, record) => {
-        const menuItems = [{ key: "Update", label: "Update" }];
+        const menuItems = [
+          { key: "Update", label: "Update" },
+          {
+            type: "divider",
+          },
+          { key: "Delete", label: "Delete", danger: true },
+        ];
 
         const handleMenuClick = ({ key }) => {
           if (key === "Update") {

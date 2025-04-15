@@ -23,7 +23,6 @@ function Calibrations({ serialNumber }) {
 
   const getCalibrations = async () => {
     const { data } = await http.get(`/api/calibrationRecords/${serialNumber}`);
-    console.log(data);
     setCalibrations(data);
   };
 

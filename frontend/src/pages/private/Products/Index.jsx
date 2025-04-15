@@ -24,6 +24,7 @@ import {
 import dayjs from "dayjs";
 
 import ErrorContent from "../../../components/common/ErrorContent";
+import FormProduct from "./components/FormProduct";
 
 import http from "../../../services/httpService";
 import { getColumnSearchProps } from "../../../helpers/TableFilterProps";
@@ -201,6 +202,7 @@ function Products() {
       width: 50,
       render: (_, record) => {
         const menuItems = [
+          { key: "View", label: "View" },
           { key: "Update", label: "Update" },
           {
             type: "divider",
@@ -209,7 +211,15 @@ function Products() {
         ];
 
         const handleMenuClick = ({ key }) => {
-          if (key === "Update") {
+          if (key === "View") {
+            window.open(
+              `/products/${record.id}`,
+              "_blank",
+              "noopener,noreferrer"
+            );
+            // setSelectedProduct(record);
+            // toggleFormUpdateProductOpen();
+          } else if (key === "Update") {
             // setSelectedProduct(record);
             // toggleFormUpdateProductOpen();
           } else if (key === "Delete") {
@@ -464,10 +474,10 @@ function Products() {
         title="Product Inventory"
         open={isProductInventoryModalOpen}
         destroyOnClose
-        width={960}
+        width={600}
         onClose={toggleProductInventoryModelOpen}
       >
-        gg
+        <FormProduct />
       </Drawer>
     </>
   );
