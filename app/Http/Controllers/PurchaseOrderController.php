@@ -130,7 +130,7 @@ class PurchaseOrderController extends Controller
             $purchaseOrder = PurchaseOrder::create([
                 'supplier_id' => $request->supplier_id,
                 'order_date' => now(),
-                'status_id' => $this->getStatusId('Pending Approval'),
+                'status_id' => $this->getStatusId('Pending'),
                 'total_amount' => 0, // Set initial total_amount to 0
                 'created_by' => $userId,
                 'updated_by' => $userId,
