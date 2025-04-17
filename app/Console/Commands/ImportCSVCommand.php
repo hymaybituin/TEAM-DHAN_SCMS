@@ -188,14 +188,17 @@ class ImportCSVCommand extends Command
                     'updated_by' => 1,
                 ]);
 
+                $currentYear = now()->format('Y');
                 for ($i = 0; $i < $productData['quantity']; $i++) {
+                    $barcode = "{$currentYear}" . str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+                
                     IncomingStock::create([
                         'purchase_order_item_id' => $poItem->id,
                         'serial_number' => (strtolower($productData['serial_number']) === 'na' || empty($productData['serial_number'])) ? null : $productData['serial_number'],
                         'lot_number' => (strtolower($productData['lot_number']) === 'na' || empty($productData['lot_number'])) ? null : $productData['lot_number'],
                         'expiration_date' => ($productData['expiration_date'] === '1990-01-01' || empty($productData['expiration_date'])) ? null : $productData['expiration_date'],
                         'product_id' => $productData['product_id'],
-                        'barcode' => now()->format('Ymd') . '-' . str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT),
+                        'barcode' => $barcode,
                         'quantity' => 1,
                         'created_by_user_id' => 1,
                         'updated_by_user_id' => 1,
