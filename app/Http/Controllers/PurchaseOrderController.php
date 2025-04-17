@@ -41,6 +41,7 @@ class PurchaseOrderController extends Controller
             // Fetch details for all Purchase Orders
             $purchaseOrders = PurchaseOrder::with([
                 'status',
+                'supplier',
                 'items.product',
                 'items.deliveries'
             ])->get();
