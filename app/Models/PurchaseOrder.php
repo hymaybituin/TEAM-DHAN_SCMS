@@ -20,15 +20,18 @@ class PurchaseOrder extends Model
     protected static function boot()
     {
         parent::boot();
-
+    
         static::creating(function ($purchaseOrder) {
-            // Temporarily set PO number as null so ID is generated first
-            $purchaseOrder->ponumber = null;
+            // Temporarily set PO number to indicate the source
+            $purchaseOrder->ponumber = $purchaseOrder->ponumber ?? 'I-TEMP';
         });
-
+    
         static::created(function ($purchaseOrder) {
-            // Generate PO number based on ID
-            $purchaseOrder->ponumber = 'P' . str_pad($purchaseOrder->id, 6, '0', STR_PAD_LEFT);
+            // Determine prefix based on temporary value
+            $prefix = ($purchaseOrder->ponumber === 'I-TEMP') ? 'I-' : 'N-';
+    
+            // Generate final PO number based on ID
+            $purchaseOrder->ponumber = $prefix . 'P' . str_pad($purchaseOrder->id, 6, '0', STR_PAD_LEFT);
             $purchaseOrder->save();
         });
     }

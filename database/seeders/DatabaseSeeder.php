@@ -26,6 +26,9 @@ use App\Models\ProductGroup;
 use App\Models\PurchaseOrder;
 use App\Models\InsuranceClaim;
 use Illuminate\Support\Carbon;
+
+
+use App\Imports\ProductsImport;
 use App\Models\ProductCategory;
 use App\Models\SupplierProduct;
 use Illuminate\Database\Seeder;
@@ -36,9 +39,18 @@ use App\Models\PurchaseOrderItem;
 use App\Models\InventoryEquipment;
 use App\Models\PaymentTransaction;
 use Illuminate\Support\Facades\DB;
+
+
 use App\Models\InventoryConsumable;
 use App\Models\PurchaseOrderStatus;
 use Illuminate\Support\Facades\Hash;
+use Maatwebsite\Excel\Facades\Excel;
+
+
+
+use Illuminate\Support\Facades\Artisan;
+
+
 
 class DatabaseSeeder extends Seeder
 {
@@ -47,6 +59,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        
         // Seed users
         User::create([
             'id' => 1,
@@ -78,11 +91,7 @@ class DatabaseSeeder extends Seeder
             'updated_at' => now(),
         ]);
 
-        
-       
-        
-
-
+    
         DB::table('roles')->insert([
             ['id' => 1, 'name' => 'Admin', 'description' => 'Administrator with full access to the system', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
             ['id' => 2, 'name' => 'Inventory Manager', 'description' => 'Manages inventory and oversees stock levels', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()],
@@ -139,6 +148,20 @@ class DatabaseSeeder extends Seeder
         foreach ($statuses as $status) {
             Status::create($status);
         }
+            
+
+          // Seed warehouses
+          Warehouse::create(['id' => 1, 'name' => 'Default warehouse', 'address' => '123 Warehouse St.', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]);
+
+
+           // Run the CSV import command
+           Artisan::call('import:csv', ['file' => storage_path('app/products.csv')]);
+          
+           $this->command->info('CSV Import Seeder executed successfully!');
+
+
+
+    /*
         
         $units = [
             ['name' => 'Piece', 'abbreviation' => 'pc', 'description' => 'Single unit of an item'],
@@ -437,6 +460,7 @@ class DatabaseSeeder extends Seeder
             'updated_at' => now(),
         ]);
 
+    */
 
       /*
         // Seed orders
