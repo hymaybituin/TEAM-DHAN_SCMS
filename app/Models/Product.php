@@ -43,10 +43,13 @@ class Product extends Model
     protected static function boot()
     {
         parent::boot();
-
+    
         static::creating(function ($product) {
-            // Generate SKU: First 4 letters of product name + 4 random alphanumeric characters
-            $product->sku = strtoupper(substr($product->name, 0, 4)) . strtoupper(Str::random(4));
+            // Clean product name: Remove special characters and spaces
+            $cleanName = preg_replace('/[^A-Za-z0-9]/', '', $product->name);
+    
+            // Generate SKU: First 4 letters of cleaned product name + 4 random alphanumeric characters
+            $product->sku = strtoupper(substr($cleanName, 0, 4)) . strtoupper(Str::random(4));
         });
     }
 
