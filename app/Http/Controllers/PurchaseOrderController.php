@@ -102,7 +102,7 @@ class PurchaseOrderController extends Controller
         return $purchaseOrder;
     }
 
-    
+
     public function destroy($id)
     {
         $purchaseOrder = PurchaseOrder::findOrFail($id);
@@ -129,7 +129,7 @@ class PurchaseOrderController extends Controller
     
             $purchaseOrder = PurchaseOrder::create([
                 'supplier_id' => $request->supplier_id,
-                'order_date' => $request->order_date,
+                'order_date' => now(),
                 'status_id' => $this->getStatusId('Pending Approval'),
                 'total_amount' => 0, // Set initial total_amount to 0
                 'created_by' => $userId,
@@ -193,11 +193,7 @@ class PurchaseOrderController extends Controller
                 'updated_by' => $userId,
             ]);
 
-            if ($request->status == 'Received') {
-                $purchaseOrderItems = PurchaseOrderItem::where('purchase_order_id', $id)->get();
-                Log::info('Adding items to inventory for Purchase Order ID: ' . $id); // Log when adding items to inventory
-                $this->addItemsToInventory($purchaseOrderItems, $userId);
-            }
+        
         });
 
         return response()->json(['message' => 'Purchase order status updated successfully']);
@@ -207,50 +203,5 @@ class PurchaseOrderController extends Controller
         return Status::where('name', $statusName)->first()->id;
     }
 
-    private function addItemsToInventory($items, $userId)
-    {
-        foreach ($items as $item) {
-            $product = Product::find($item->product_id);
-            
-            if (!$product) {
-                Log::error('Product ID: ' . $item->product_id . ' not found.');
-                continue;
-            }
-            
-            $productGroup = $product->productGroup()->first();
-            if (!$productGroup) {
-                Log::error('Product Group not found for Product ID: ' . $item->product_id);
-                continue;
-            }
-            
-            $productType = $productGroup->productType()->first();
-            if (!$productType) {
-                Log::error('Product Type not found for Product Group ID: ' . $productGroup->id);
-                continue;
-            }
-    
-            if ($productType->name === 'consumable') {
-                InventoryConsumable::create([
-                    'product_id' => $item->product_id,
-                    'purchase_order_item_id' => $item->id,
-                    'quantity' => $item->quantity,
-                    'created_by' => $userId,
-                    'updated_by' => $userId,
-                ]);
-            } elseif ($productType->name === 'equipment') {
-                for ($i = 0; $i < $item->quantity; $i++) {
-                    InventoryEquipment::create([
-                        'product_id' => $item->product_id,
-                        'purchase_order_item_id' => $item->id,
-                        'purchase_date' => now(),
-                        'status_id' => $this->getStatusId('Pending'),
-                        'created_by' => $userId,
-                        'updated_by' => $userId,
-                    ]);
-                }
-            }
-        }
-    }
-    
 
 }
