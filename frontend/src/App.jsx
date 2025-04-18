@@ -16,8 +16,9 @@ import ProductInventory from "./pages/private/ProductInventory/Index";
 
 import ViewProductItem from "./pages/private/Products/components/ViewProductItem/Index.jsx";
 import PurchaseOrders from "./pages/private/PurchaseOrders/Index.jsx";
-import CreatePurchaseOrder from "./pages/private/PurchaseOrders/CreatePurchaseOrder/Index.jsx";
-import ViewPurchaseOrder from "./pages/private/PurchaseOrders/ViewPurchaseOrder.jsx";
+import PurchaseOrdersCreate from "./pages/private/PurchaseOrdersCreate/Index.jsx";
+import PurchaseOrdersView from "./pages/private/PurchaseOrdersView/Index.jsx";
+import PurchaseOrdersReceive from "./pages/private/PurchaseOrdersReceive/Index.jsx";
 import Orders from "./pages/private/Orders/Index.jsx";
 
 import ProductGroups from "./pages/private/ProductGroups/Index.jsx";
@@ -58,12 +59,33 @@ function App() {
     //   path: "/customerOrders",
     //   element: <CustomerOrder />,
     // },
-    // {
-    //   title: "Purchase Orders",
-    //   subTitle: "purchase order management",
-    //   path: "/purchaseOrders",
-    //   element: <PurchaseOrders />,
-    // },
+    {
+      title: "Purchase Orders",
+      subTitle: "purchase order management",
+      path: "/purchaseOrders",
+      element: <PurchaseOrders />,
+    },
+    {
+      title: "Create Purchase Order",
+      subTitle: "create purchase order here",
+      path: "/purchaseOrders/create",
+      element: <PurchaseOrdersCreate />,
+      isWithBackButton: true,
+    },
+    {
+      title: "View Purchase Order",
+      subTitle: "view your purchase order here",
+      path: "/purchaseOrders/:purchaseOrderId",
+      element: <PurchaseOrdersView />,
+      isWithBackButton: true,
+    },
+    {
+      title: "Receive Purchase Order",
+      subTitle: "receive your purchase order here",
+      path: "/purchaseOrders/receive/:purchaseOrderId",
+      element: <PurchaseOrdersReceive />,
+      isWithBackButton: true,
+    },
     // {
     //   title: "View Order",
     //   subTitle: "view order full details",
@@ -85,25 +107,14 @@ function App() {
     //   element: <ViewProductItem />,
     //   isWithBackButton: true,
     // },
-    // {
-    //   title: "Create Purchase Order",
-    //   subTitle: "create purchase order here",
-    //   path: "/purchaseOrders/create",
-    //   element: <CreatePurchaseOrder />,
-    // },
+
     // {
     //   title: "Orders",
     //   subTitle: "create purchamanage order here",
     //   path: "/orders",
     //   element: <Orders />,
     // },
-    // {
-    //   title: "View Purchase Order",
-    //   subTitle: "view your purchase order here",
-    //   path: "/purchaseOrders/:purchaseOrderId",
-    //   element: <ViewPurchaseOrder />,
-    //   isWithBackButton: true,
-    // },
+
     // {
     //   title: "Products",
     //   subTitle: "product management",

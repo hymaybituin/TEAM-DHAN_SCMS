@@ -30,7 +30,7 @@ function PurchaseOrders() {
   const [purchaseOrders, setPurchaseOrders] = useState([]);
 
   const [isContentLoading, setIsContentLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   const navigate = useNavigate();
   const { statuses } = useDataStore();
@@ -38,7 +38,7 @@ function PurchaseOrders() {
 
   const getPurchaseOrders = async () => {
     const { data } = await http.get("/api/purchaseOrders");
-    setPurchaseOrders(data);
+    setPurchaseOrders(data.purchase_orders);
   };
 
   useEffect(() => {
@@ -46,8 +46,8 @@ function PurchaseOrders() {
       try {
         setIsContentLoading(true);
         await getPurchaseOrders();
-      } catch (error) {
-        setError(error);
+      } catch (errorMsg) {
+        setErrorMsg(errorMsg);
       } finally {
         setIsContentLoading(false);
       }
@@ -56,85 +56,85 @@ function PurchaseOrders() {
     fetchPurchaseOrders();
   }, []);
 
-  if (error) {
-    return <ErrorContent />;
+  if (errorMsg) {
+    return <ErrorContent errorMessage={errorMsg} />;
   }
 
   const handleUpdatePurchaseOrder = async (purchaseOrder, newStatusId) => {
     try {
       setIsContentLoading(true);
-      await http.put(`/api/purchaseOrders/${purchaseOrder.id}`, {
+      await http.put(`/api/purchaseOrders/${purchaseOrder.id}/status`, {
         status_id: Number(newStatusId),
       });
 
-      if (Number(newStatusId) === 6) {
-        const { data } = await http.get(
-          `/api/purchaseOrders/${purchaseOrder.id}`
-        );
+      // if (Number(newStatusId) === 6) {
+      //   const { data } = await http.get(
+      //     `/api/purchaseOrders/${purchaseOrder.id}`
+      //   );
 
-        const { purchase_order_items: purchaseOrderItems } = data;
+      //   const { purchase_order_items: purchaseOrderItems } = data;
 
-        const consumableItems = purchaseOrderItems.filter(
-          ({ product }) => product.product_category_id == 1
-        );
-        const equipmentItems = purchaseOrderItems
-          .filter(({ product }) => product.product_category_id == 2)
-          .flatMap((equipment) =>
-            Array.from({ length: equipment.quantity }, () => {
-              return {
-                ...equipment,
-                quantity: 1,
-              };
-            })
-          );
+      //   const consumableItems = purchaseOrderItems.filter(
+      //     ({ product }) => product.product_category_id == 1
+      //   );
+      //   const equipmentItems = purchaseOrderItems
+      //     .filter(({ product }) => product.product_category_id == 2)
+      //     .flatMap((equipment) =>
+      //       Array.from({ length: equipment.quantity }, () => {
+      //         return {
+      //           ...equipment,
+      //           quantity: 1,
+      //         };
+      //       })
+      //     );
 
-        const forInsertProductItemConsumables = consumableItems.map(
-          (consumableItem) => {
-            return {
-              product_id: consumableItem.product_id,
-              purchase_order_id: purchaseOrder.id,
-              batch_number: null,
-              expiry_date: null,
-              other_details: null,
-              barcode: null,
-              location_id: 1,
-              warehouse_id: 1,
-              status_id: 3,
-            };
-          }
-        );
+      //   const forInsertProductItemConsumables = consumableItems.map(
+      //     (consumableItem) => {
+      //       return {
+      //         product_id: consumableItem.product_id,
+      //         purchase_order_id: purchaseOrder.id,
+      //         batch_number: null,
+      //         expiry_date: null,
+      //         other_details: null,
+      //         barcode: null,
+      //         location_id: 1,
+      //         warehouse_id: 1,
+      //         status_id: 3,
+      //       };
+      //     }
+      //   );
 
-        const forInsertProductItemEquipments = equipmentItems.map(
-          (equipmentItem) => {
-            return {
-              product_id: equipmentItem.product_id,
-              purchase_order_id: purchaseOrder.id,
-              serial_number: null,
-              model_number: null,
-              maintenance_interval_in_month: 0,
-              other_details: null,
-              barcode: null,
-              location_id: 1,
-              warehouse_id: 1,
-              status_id: 3,
-            };
-          }
-        );
+      //   const forInsertProductItemEquipments = equipmentItems.map(
+      //     (equipmentItem) => {
+      //       return {
+      //         product_id: equipmentItem.product_id,
+      //         purchase_order_id: purchaseOrder.id,
+      //         serial_number: null,
+      //         model_number: null,
+      //         maintenance_interval_in_month: 0,
+      //         other_details: null,
+      //         barcode: null,
+      //         location_id: 1,
+      //         warehouse_id: 1,
+      //         status_id: 3,
+      //       };
+      //     }
+      //   );
 
-        await http.post(
-          "/api/productItemConsumablesNew",
-          forInsertProductItemConsumables
-        );
+      //   await http.post(
+      //     "/api/productItemConsumablesNew",
+      //     forInsertProductItemConsumables
+      //   );
 
-        await http.post(
-          "/api/productItemEquipmentsNew",
-          forInsertProductItemEquipments
-        );
-      }
+      //   await http.post(
+      //     "/api/productItemEquipmentsNew",
+      //     forInsertProductItemEquipments
+      //   );
+      // }
 
       await getPurchaseOrders();
-    } catch (error) {
-      setError(error);
+    } catch (errorMsg) {
+      setErrorMsg(errorMsg);
     } finally {
       setIsContentLoading(false);
     }
@@ -143,24 +143,22 @@ function PurchaseOrders() {
   const tableColumns = [
     {
       title: "Purchase Order No.",
-      dataIndex: "id",
-      ...getColumnSearchProps("id"),
+      dataIndex: "ponumber",
+      ...getColumnSearchProps("ponumber"),
       render: (_, record) => {
-        const { id, supplier, notes } = record;
+        const { ponumber, supplier } = record;
 
         return (
           <div>
             <div>
-              <Text strong>MG{String(id).padStart(4, "0")}</Text>
+              <Text strong>{ponumber}</Text>
             </div>
+
             <div>{supplier.name}</div>
             <div>
-              <Text type="secondary">{supplier.address}</Text>
-            </div>
-            <div>
-              {notes && (
+              {supplier.contact_info && (
                 <Text type="secondary" italic>
-                  {notes}
+                  {supplier.contact_info}
                 </Text>
               )}
             </div>
@@ -176,68 +174,67 @@ function PurchaseOrders() {
     },
     {
       title: "Status",
-      dataIndex: "status_id",
       width: 100,
-      render: (status_id) => {
+      render: (_, record) => {
         let color = "orange";
-        if (status_id === 5) {
+        const statusId = record.status_id;
+        if (statusId === 2 || statusId === 33) {
           color = "green";
-        } else if (status_id === 6) {
+        } else if (statusId === 6) {
           color = "blue";
-        } else if (status_id === 7) {
+        } else if (statusId === 7) {
           color = "purple";
-        } else if (status_id === 8) {
+        } else if (statusId === 12) {
           color = "red";
         }
-        return <Tag color={color}>{statuses[status_id]}</Tag>;
+        return <Tag color={color}>{record.status.name}</Tag>;
       },
     },
     {
       title: "Action",
       width: 50,
       render: (_, record) => {
-        const menuItems = [
-          { key: "View", label: "View Details" },
-          {
-            type: "divider",
-          },
-          { key: 8, label: statuses[8], danger: true },
-        ];
+        const menuItems = [{ key: "View", label: "View Details" }];
 
-        if (record.status_id === 4) {
-          menuItems.unshift({ key: 5, label: statuses[5] });
+        if (record.status_id === 1) {
+          menuItems.push({ type: "divider" });
+          menuItems.push({ key: 12, label: statuses[12], danger: true });
+          menuItems.unshift({ key: 2, label: statuses[2] });
         }
 
-        if (record.status_id === 5) {
-          menuItems.unshift({ key: 10, label: statuses[10] });
+        if (record.status_id === 2) {
+          menuItems.push({ type: "divider" });
+          menuItems.push({ key: 12, label: statuses[12], danger: true });
+          menuItems.unshift({ key: 33, label: statuses[33] });
         }
 
-        if (record.status_id === 10) {
-          menuItems.unshift({ key: 6, label: statuses[6] });
-          menuItems.pop();
-          menuItems.pop();
+        if (record.status_id === 33) {
+          menuItems.unshift({ key: "Receive", label: "Receive" });
         }
 
-        if (record.status_id === 6) {
-          menuItems.unshift({ key: 7, label: statuses[7] });
-          menuItems.pop();
-          menuItems.pop();
-        }
+        // if (record.status_id === 6) {
+        //   menuItems.unshift({ key: 7, label: statuses[7] });
+        //   menuItems.pop();
+        //   menuItems.pop();
+        // }
 
-        if (record.status_id === 7) {
-          menuItems.unshift({ key: 8, label: statuses[8] });
-          menuItems.pop();
-          menuItems.pop();
-        }
+        // if (record.status_id === 7) {
+        //   menuItems.unshift({ key: 8, label: statuses[8] });
+        //   menuItems.pop();
+        //   menuItems.pop();
+        // }
 
-        if (record.status_id === 7 || record.status_id === 8) {
-          menuItems.pop();
-          menuItems.pop();
-        }
+        // if (record.status_id === 7 || record.status_id === 8) {
+        //   menuItems.pop();
+        //   menuItems.pop();
+        // }
 
         const handleMenuClick = ({ key }) => {
           if (key === "View") {
             navigate(`/purchaseOrders/${record.id}`);
+          }
+          if (key === "Receive") {
+            navigate(`/purchaseOrders/receive/${record.id}`);
           } else {
             modal.confirm({
               title: `${statuses[key]} Purchase Order`,
@@ -266,11 +263,14 @@ function PurchaseOrders() {
     },
   ];
 
-  const pendingPOs = purchaseOrders.filter((po) => po.status_id === 4);
-  const processingPOs = purchaseOrders.filter((po) => po.status_id === 10);
-  const approvedPOs = purchaseOrders.filter((po) => po.status_id === 5);
-  const fulfilledPOs = purchaseOrders.filter((po) => po.status_id === 6);
-  const cancelledPos = purchaseOrders.filter((po) => po.status_id === 8);
+  const pendingPOs = purchaseOrders.filter((po) => po.status_id === 1);
+  const approvedPOs = purchaseOrders.filter((po) => po.status_id === 2);
+  const forReceivingPOs = purchaseOrders.filter((po) => po.status_id === 33);
+  const partiallyReceivedPOs = purchaseOrders.filter(
+    (po) => po.status_id === 31
+  );
+  const deliveredPOs = purchaseOrders.filter((po) => po.status_id === 11);
+  const cancelledPos = purchaseOrders.filter((po) => po.status_id === 12);
 
   const tabItems = [
     {
@@ -302,42 +302,64 @@ function PurchaseOrders() {
       ),
     },
     {
-      key: "22",
-      label: (
-        <>
-          Processing{" "}
-          {processingPOs.length > 0 && (
-            <Badge count={processingPOs.length} color="green" />
-          )}
-        </>
-      ),
-      children: (
-        <Table columns={tableColumns} dataSource={processingPOs} rowKey="id" />
-      ),
-    },
-    {
       key: "3",
       label: (
         <>
-          Fulfilled{" "}
-          {fulfilledPOs.length > 0 && (
-            <Badge count={fulfilledPOs.length} color="blue" />
+          For Receiving{" "}
+          {forReceivingPOs.length > 0 && (
+            <Badge count={forReceivingPOs.length} color="green" />
           )}
         </>
       ),
       children: (
-        <Table columns={tableColumns} dataSource={fulfilledPOs} rowKey="id" />
+        <Table
+          columns={tableColumns}
+          dataSource={forReceivingPOs}
+          rowKey="id"
+        />
       ),
     },
     {
       key: "4",
+      label: (
+        <>
+          Partially Received{" "}
+          {partiallyReceivedPOs.length > 0 && (
+            <Badge count={partiallyReceivedPOs.length} color="purple" />
+          )}
+        </>
+      ),
+      children: (
+        <Table
+          columns={tableColumns}
+          dataSource={partiallyReceivedPOs}
+          rowKey="id"
+        />
+      ),
+    },
+    {
+      key: "5",
+      label: (
+        <>
+          Delivered{" "}
+          {deliveredPOs.length > 0 && (
+            <Badge count={deliveredPOs.length} color="blue" />
+          )}
+        </>
+      ),
+      children: (
+        <Table columns={tableColumns} dataSource={deliveredPOs} rowKey="id" />
+      ),
+    },
+    {
+      key: "6",
       label: "Cancelled",
       children: (
         <Table columns={tableColumns} dataSource={cancelledPos} rowKey="id" />
       ),
     },
     {
-      key: "5",
+      key: "7",
       label: "All Purchase Orders",
       children: (
         <Table columns={tableColumns} dataSource={purchaseOrders} rowKey="id" />

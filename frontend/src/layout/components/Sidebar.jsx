@@ -115,6 +115,11 @@ function Sidebar() {
       label: <Link to="/products">Products</Link>,
     },
     {
+      key: "/purchaseOrders",
+      icon: <ShoppingCartOutlined />,
+      label: <Link to="/purchaseOrders">Purchase Orders</Link>,
+    },
+    {
       key: "/suppliers",
       icon: <InboxOutlined />,
       label: <Link to="/suppliers">Suppliers</Link>,
