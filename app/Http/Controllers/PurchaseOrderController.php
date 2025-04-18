@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Status;
-use Illuminate\Http\Request;
-use App\Models\PurchaseOrder;
 use App\Models\Product;
+use Illuminate\Http\Request;
+use App\Models\IncomingStock;
+use App\Models\PurchaseOrder;
+use App\Models\SupplierProduct;
 use App\Models\PurchaseOrderItem;
 use App\Models\InventoryEquipment;
 use Illuminate\Support\Facades\DB;
@@ -14,48 +16,56 @@ use App\Models\PurchaseOrderStatus;
 use Illuminate\Support\Facades\Log;
 use App\Models\SupplierProductPrice;
 use Illuminate\Support\Facades\Auth;
-use App\Models\SupplierProduct;
 
 class PurchaseOrderController extends Controller
 {
 
     public function getPurchaseOrderDetails($purchaseOrderId = null)
     {
-        // Check if a specific purchaseOrderId is provided
         if ($purchaseOrderId) {
-            // Fetch details for the specified Purchase Order
             $purchaseOrder = PurchaseOrder::with([
                 'supplier',
                 'status',
                 'items.product',
                 'items.product.productUnit',
-                'items.deliveries'
+                'items.deliveries',
             ])->findOrFail($purchaseOrderId);
-
-            // Calculate remaining quantity for each item
+    
+            // Calculate remaining quantity for each item and fetch barcodes safely
             $purchaseOrder->items->each(function ($item) {
                 $totalDelivered = $item->deliveries->sum('delivered_quantity');
                 $item->remaining_quantity = $item->quantity - $totalDelivered;
+    
+                // Fetch all barcodes for this purchase order item and attach them to deliveries
+                $item->deliveries->each(function ($delivery) {
+                    $delivery->barcodes = IncomingStock::where('purchase_order_item_id', $delivery->purchase_order_item_id)
+                        ->pluck('barcode')->toArray() ?? [];
+                });
             });
-
+    
             return response()->json(['purchase_order' => $purchaseOrder]);
         } else {
-            // Fetch details for all Purchase Orders
             $purchaseOrders = PurchaseOrder::with([
                 'status',
                 'supplier',
                 'items.product',
-                'items.deliveries'
+                'items.deliveries',
             ])->get();
-
-            // Calculate remaining quantity for each item in all purchase orders
+    
+            // Calculate remaining quantity for each item in all purchase orders and fetch barcodes
             $purchaseOrders->each(function ($purchaseOrder) {
                 $purchaseOrder->items->each(function ($item) {
                     $totalDelivered = $item->deliveries->sum('delivered_quantity');
                     $item->remaining_quantity = $item->quantity - $totalDelivered;
+    
+                    // Attach barcodes to deliveries instead of directly to the item
+                    $item->deliveries->each(function ($delivery) {
+                        $delivery->barcodes = IncomingStock::where('purchase_order_item_id', $delivery->purchase_order_item_id)
+                            ->pluck('barcode')->toArray() ?? [];
+                    });
                 });
             });
-
+    
             return response()->json(['purchase_orders' => $purchaseOrders]);
         }
     }
@@ -132,6 +142,7 @@ class PurchaseOrderController extends Controller
     
             $purchaseOrder = PurchaseOrder::create([
                 'supplier_id' => $request->supplier_id,
+                'ponumber' => "Normal",
                 'order_date' => now(),
                 'status_id' => $this->getStatusId('Pending'),
                 'total_amount' => 0, // Set initial total_amount to 0

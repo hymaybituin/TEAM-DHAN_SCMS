@@ -142,7 +142,8 @@ class DatabaseSeeder extends Seeder
             ['id' => 29, 'name' => 'Return Demo (working)', 'description' => 'Equipment demo tested and ready to sell', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()],
             ['id' => 30, 'name' => 'Return Demo (not working)', 'description' => 'Equipment demo tested and ready to sell', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()],
             ['id' => 31, 'name' => 'Partially Received', 'description' => 'Order has been partially received', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 32, 'name' => 'Completed', 'description' => 'Completed', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]
+            ['id' => 32, 'name' => 'Completed', 'description' => 'Completed', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 33, 'name' => 'For Recieving', 'description' => 'For Recieving', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]
         ];
 
         foreach ($statuses as $status) {

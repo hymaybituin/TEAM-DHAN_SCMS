@@ -140,7 +140,15 @@ class ImportCSVCommand extends Command
     {
         foreach (explode(',', $tags) as $tagName) {
             $tag = Tag::firstOrCreate(['name' => trim($tagName)]);
-            ProductTag::create(['product_id' => $productId, 'tag_id' => $tag->id]);
+
+            // Check if the product-tag association already exists
+            $existingProductTag = ProductTag::where('product_id', $productId)
+                ->where('tag_id', $tag->id)
+                ->exists();
+
+            if (!$existingProductTag) {
+                ProductTag::create(['product_id' => $productId, 'tag_id' => $tag->id]);
+            }
         }
     }
 

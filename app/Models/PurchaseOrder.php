@@ -22,13 +22,17 @@ class PurchaseOrder extends Model
         parent::boot();
     
         static::creating(function ($purchaseOrder) {
-            // Temporarily set PO number to indicate the source
-            $purchaseOrder->ponumber = $purchaseOrder->ponumber ?? 'I-TEMP';
+            // Temporarily set PO number based on provided type
+            if ($purchaseOrder->ponumber === "Normal") {
+                $purchaseOrder->ponumber = 'N-TEMP';
+            } else {
+                $purchaseOrder->ponumber = 'I-TEMP';
+            }
         });
     
         static::created(function ($purchaseOrder) {
             // Determine prefix based on temporary value
-            $prefix = ($purchaseOrder->ponumber === 'I-TEMP') ? 'I-' : 'N-';
+            $prefix = ($purchaseOrder->ponumber === 'N-TEMP') ? 'N-' : 'I-';
     
             // Generate final PO number based on ID
             $purchaseOrder->ponumber = $prefix . 'P' . str_pad($purchaseOrder->id, 6, '0', STR_PAD_LEFT);
