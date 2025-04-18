@@ -14,7 +14,7 @@ use App\Models\PurchaseOrderStatus;
 use Illuminate\Support\Facades\Log;
 use App\Models\SupplierProductPrice;
 use Illuminate\Support\Facades\Auth;
-use App\Models\SupplierProductPrices;
+use App\Models\SupplierProduct;
 
 class PurchaseOrderController extends Controller
 {
@@ -25,8 +25,10 @@ class PurchaseOrderController extends Controller
         if ($purchaseOrderId) {
             // Fetch details for the specified Purchase Order
             $purchaseOrder = PurchaseOrder::with([
+                'supplier',
                 'status',
                 'items.product',
+                'items.product.productUnit',
                 'items.deliveries'
             ])->findOrFail($purchaseOrderId);
 
@@ -138,25 +140,19 @@ class PurchaseOrderController extends Controller
             ]);
     
             foreach ($request->items as $item) {
-                $supplierProductPrice = SupplierProductPrice::where('supplier_id', $request->supplier_id)
-                    ->where('product_id', $item['product_id'])
-                    ->first();
-    
-                if ($supplierProductPrice) {
-                    $unitPrice = $supplierProductPrice->price;
-                    $totalPrice = $item['quantity'] * $unitPrice;
-                    $totalAmount += $totalPrice;
-    
-                    PurchaseOrderItem::create([
-                        'purchase_order_id' => $purchaseOrder->id,
-                        'product_id' => $item['product_id'],
-                        'quantity' => $item['quantity'],
-                        'unit_price' => $unitPrice,
-                        'total_price' => $totalPrice,
-                        'created_by' => $userId,
-                        'updated_by' => $userId,
-                    ]);
-                }
+                $unitPrice = $item['unit_price'];
+                $totalPrice = $item['quantity'] * $unitPrice;
+                $totalAmount += $totalPrice;
+
+                PurchaseOrderItem::create([
+                    'purchase_order_id' => $purchaseOrder->id,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $unitPrice,
+                    'total_price' => $totalPrice,
+                    'created_by' => $userId,
+                    'updated_by' => $userId,
+                ]);                
             }
     
             $purchaseOrder->total_amount = $totalAmount;
@@ -180,7 +176,8 @@ class PurchaseOrderController extends Controller
 
         DB::transaction(function () use ($request, $id, $userId) {
             $purchaseOrder = PurchaseOrder::find($id);
-            $statusId = $this->getStatusId($request->status);
+            // $statusId = $this->getStatusId($request->status);
+            $statusId = $request->status_id;
 
             $purchaseOrder->status_id = $statusId;
             $purchaseOrder->updated_by = $userId;
