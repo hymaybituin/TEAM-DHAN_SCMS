@@ -31,15 +31,15 @@ class PurchaseOrderController extends Controller
                 'items.deliveries',
             ])->findOrFail($purchaseOrderId);
     
-            // Calculate remaining quantity for each item and fetch barcodes safely
+            // Calculate remaining quantity for each item and fetch details from `incoming_stocks`
             $purchaseOrder->items->each(function ($item) {
                 $totalDelivered = $item->deliveries->sum('delivered_quantity');
                 $item->remaining_quantity = $item->quantity - $totalDelivered;
     
-                // Fetch all barcodes for this purchase order item and attach them to deliveries
+                // Fetch barcodes, lot numbers, serial numbers, and expiration dates
                 $item->deliveries->each(function ($delivery) {
-                    $delivery->barcodes = IncomingStock::where('purchase_order_item_id', $delivery->purchase_order_item_id)
-                        ->pluck('barcode')->toArray() ?? [];
+                    $delivery->incoming_stocks = IncomingStock::where('purchase_order_item_id', $delivery->purchase_order_item_id)
+                        ->get(['barcode', 'lot_number', 'serial_number', 'expiration_date']);
                 });
             });
     
@@ -52,16 +52,16 @@ class PurchaseOrderController extends Controller
                 'items.deliveries',
             ])->get();
     
-            // Calculate remaining quantity for each item in all purchase orders and fetch barcodes
+            // Calculate remaining quantity for each item and fetch incoming stock details
             $purchaseOrders->each(function ($purchaseOrder) {
                 $purchaseOrder->items->each(function ($item) {
                     $totalDelivered = $item->deliveries->sum('delivered_quantity');
                     $item->remaining_quantity = $item->quantity - $totalDelivered;
     
-                    // Attach barcodes to deliveries instead of directly to the item
+                    // Attach barcodes, lot numbers, serial numbers, and expiration dates to deliveries
                     $item->deliveries->each(function ($delivery) {
-                        $delivery->barcodes = IncomingStock::where('purchase_order_item_id', $delivery->purchase_order_item_id)
-                            ->pluck('barcode')->toArray() ?? [];
+                        $delivery->incoming_stocks = IncomingStock::where('purchase_order_item_id', $delivery->purchase_order_item_id)
+                            ->get(['barcode', 'lot_number', 'serial_number', 'expiration_date']);
                     });
                 });
             });

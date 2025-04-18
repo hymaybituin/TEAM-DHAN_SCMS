@@ -124,17 +124,17 @@ class PurchaseOrderItemDeliveryController extends Controller
             $barcodes[] = $barcode;
         }
     
-        // **Check if the purchase order has been fully delivered**
+       // **Check total ordered vs delivered quantity**
         $totalOrdered = PurchaseOrderItem::where('purchase_order_id', $purchaseOrderItem->purchase_order_id)->sum('quantity');
         $totalDeliveredOverall = PurchaseOrderItemDelivery::whereIn('purchase_order_item_id', 
             PurchaseOrderItem::where('purchase_order_id', $purchaseOrderItem->purchase_order_id)->pluck('id')
         )->sum('delivered_quantity');
-    
+
         if ($totalDeliveredOverall >= $totalOrdered) {
-            // Update Purchase Order status to "Delivered"
+            // **All items delivered: Mark as "Delivered"**
             $purchaseOrderItem->purchaseOrder->update(['status_id' => $this->getStatusId('Delivered')]);
-    
-            // Add a status change record
+
+            // Add status update
             PurchaseOrderStatus::create([
                 'purchase_order_id' => $purchaseOrderItem->purchase_order_id,
                 'status_id' => $this->getStatusId('Delivered'),
@@ -143,8 +143,21 @@ class PurchaseOrderItemDeliveryController extends Controller
                 'created_by' => $userId,
                 'updated_by' => $userId,
             ]);
+        } elseif ($totalDeliveredOverall > 0) {
+            // **Some items delivered: Mark as "Partially Received"**
+            $purchaseOrderItem->purchaseOrder->update(['status_id' => $this->getStatusId('Partially Received')]);
+
+            // Add status update
+            PurchaseOrderStatus::create([
+                'purchase_order_id' => $purchaseOrderItem->purchase_order_id,
+                'status_id' => $this->getStatusId('Partially Received'),
+                'status_date' => now(),
+                'comments' => 'Some items have been delivered. Status updated to Partially Received.',
+                'created_by' => $userId,
+                'updated_by' => $userId,
+            ]);
         }
-    
+            
         return response()->json([
             'barcodes' => $barcodes,
         ], 201);
