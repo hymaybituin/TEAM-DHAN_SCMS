@@ -12,6 +12,7 @@ import {
   Tag,
   Modal,
 } from "antd";
+import dayjs from "dayjs";
 
 import ErrorContent from "../../../components/common/ErrorContent";
 
@@ -19,6 +20,7 @@ import http from "../../../services/httpService";
 import { formatWithComma } from "../../../helpers/numbers";
 
 import FormReceive from "./components/FormReceive";
+import ViewReceive from "./components/ViewReceive";
 
 const { Title, Text } = Typography;
 
@@ -27,6 +29,7 @@ function PurchaseOrdersReceive() {
   const [selectedPOItem, setSelectedPOItem] = useState(null);
 
   const [isFormReceiveOpen, setIsFormReceiveOpen] = useState(false);
+  const [isViewReceiveOpen, setIsViewReceiveOpen] = useState(false);
 
   const [isContentLoading, setIsContentLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -71,14 +74,40 @@ function PurchaseOrdersReceive() {
     setIsFormReceiveOpen(!isFormReceiveOpen);
   };
 
+  const toggleViewReceiveOpen = () => {
+    setIsViewReceiveOpen(!isViewReceiveOpen);
+  };
+
   const handleFormReceiveSubmit = async (formData) => {
     try {
       toggleFormReceiveOpen();
       setIsContentLoading(true);
-      await http.post("/api/purchaseOrderItemDeliveries", {
-        ...formData,
-        purchase_order_item_id: selectedPOItem.id,
-      });
+
+      if (selectedPOItem.product.is_machine) {
+        // Extract and count dynamic serials fields
+        const serialsKeys = Object.keys(formData).filter((key) =>
+          key.startsWith("serial_number_")
+        );
+
+        // Prepare API calls for each serial
+        const apiCalls = serialsKeys.map((serialKey) => {
+          return http.post("/api/purchaseOrderItemDeliveries", {
+            ...formData,
+            delivered_quantity: 1,
+            serial_number: formData[serialKey],
+            purchase_order_item_id: selectedPOItem.id,
+          });
+        });
+
+        // Execute all API calls in parallel
+        await Promise.all(apiCalls);
+      } else {
+        await http.post("/api/purchaseOrderItemDeliveries", {
+          ...formData,
+          purchase_order_item_id: selectedPOItem.id,
+        });
+      }
+
       await getPurchaseOrder();
     } catch (error) {
       setErrorMsg(error.message);
@@ -91,7 +120,14 @@ function PurchaseOrdersReceive() {
     {
       title: "Name",
       render: (_, record) => {
-        return record.product.name;
+        return (
+          <>
+            <div>{record.product.name}</div>
+            <div>
+              <Text type="secondary">Model: {record.product.model}</Text>
+            </div>
+          </>
+        );
       },
     },
     {
@@ -163,7 +199,8 @@ function PurchaseOrdersReceive() {
 
         return (
           <Button
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               setSelectedPOItem(record);
               toggleFormReceiveOpen();
             }}
@@ -175,19 +212,26 @@ function PurchaseOrdersReceive() {
     },
   ];
 
-  const { ponumber, supplier, items, total_amount, status_id, status } =
-    purchaseOrder;
+  const {
+    ponumber,
+    supplier,
+    items,
+    total_amount,
+    status_id,
+    status,
+    created_at,
+  } = purchaseOrder;
 
   let statusColor = "orange";
-  // if (status_id === 5) {
-  //   statusColor = "green";
-  // } else if (status_id === 6) {
-  //   statusColor = "blue";
-  // } else if (status_id === 7) {
-  //   statusColor = "purple";
-  // } else if (status_id === 8) {
-  //   statusColor = "red";
-  // }
+  if (status_id === 2 || status_id === 33 || status_id === 31) {
+    statusColor = "green";
+  } else if (status_id === 11) {
+    statusColor = "blue";
+  } else if (status_id === 14) {
+    statusColor = "purple";
+  } else if (status_id === 12) {
+    statusColor = "red";
+  }
 
   return (
     <>
@@ -196,9 +240,14 @@ function PurchaseOrdersReceive() {
           <Title level={5} style={{ margin: 0 }}>
             Purchase Order Number: #{ponumber}
           </Title>
+          <Text type="secondary">
+            Date Ordered: {dayjs(created_at).format("MMMM DD, YYYY")}
+          </Text>
         </Col>
         <Col>
-          <Tag color={statusColor}>{status.name}</Tag>
+          <Tag color={statusColor} style={{ fontSize: 16 }}>
+            {status.name}
+          </Tag>
         </Col>
       </Row>
       {supplier && (
@@ -216,6 +265,13 @@ function PurchaseOrdersReceive() {
         dataSource={items}
         rowKey="product_id"
         pagination={false}
+        rowClassName="cursor-pointer"
+        onRow={(record) => ({
+          onClick: () => {
+            setSelectedPOItem(record);
+            toggleViewReceiveOpen();
+          },
+        })}
       />
       <Row type="flex" justify="space-between" style={{ marginTop: 16 }}>
         <Col></Col>
@@ -250,6 +306,18 @@ function PurchaseOrdersReceive() {
           supportingData={{ poItem: selectedPOItem }}
           onSubmit={handleFormReceiveSubmit}
         />
+      </Modal>
+
+      <Modal
+        title="Receive Items"
+        style={{ top: 20 }}
+        open={isViewReceiveOpen}
+        onCancel={toggleViewReceiveOpen}
+        onOk={toggleViewReceiveOpen}
+        destroyOnClose
+        width={1000}
+      >
+        <ViewReceive supportingData={{ poItem: selectedPOItem }} />
       </Modal>
     </>
   );

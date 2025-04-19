@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Form,
   InputNumber,
@@ -17,8 +17,18 @@ import dayjs from "dayjs";
 const { Title, Text } = Typography;
 
 const FormReceive = ({ supportingData, onSubmit }) => {
+  const [machineSerialsCount, setMachineSerialsCount] = useState(1);
+
   const [formPOItemInstance] = Form.useForm();
   const inputRef = useRef(null); // Create a ref for the InputNumber component
+
+  const handleFormValuesChange = (changedValues) => {
+    const fieldName = Object.keys(changedValues)[0];
+    const fieldValue = changedValues[fieldName];
+    if (fieldName === "delivered_quantity") {
+      setMachineSerialsCount(fieldValue);
+    }
+  };
 
   const handleFormFinish = (values) => {
     // Convert `undefined` to `null`
@@ -63,7 +73,7 @@ const FormReceive = ({ supportingData, onSubmit }) => {
         <Title level={4} style={{ margin: 0 }}>
           {poItem.product.name}
         </Title>
-        <Text type="secondary">{poItem.product.model}</Text>
+        <Text type="secondary">Model: {poItem.product.model}</Text>
       </Card>
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={12}>
@@ -83,8 +93,12 @@ const FormReceive = ({ supportingData, onSubmit }) => {
         validateMessages={{
           required: "This is required.",
         }}
+        onValuesChange={handleFormValuesChange}
         onFinish={handleFormFinish}
         size="large"
+        initialValues={{
+          delivered_quantity: 1,
+        }}
       >
         <Form.Item
           label="Enter Total Item Received"
@@ -93,7 +107,7 @@ const FormReceive = ({ supportingData, onSubmit }) => {
         >
           <InputNumber
             ref={inputRef} // Attach the ref to the InputNumber component
-            min={0}
+            min={1}
             max={maxCountToReceive}
             style={{ width: "100%" }}
           />
@@ -110,13 +124,18 @@ const FormReceive = ({ supportingData, onSubmit }) => {
           />
         </Form.Item>
         {poItem.product.is_machine ? (
-          <Form.Item
-            label="Serial"
-            name="serial_number"
-            rules={[{ required: true }]}
-          >
-            <Input />
-          </Form.Item>
+          Array.from({ length: machineSerialsCount }).map((_, index) => (
+            <Form.Item
+              key={`serial_number_${index}`}
+              label={`Serial ${index + 1}`}
+              name={`serial_number_${index + 1}`}
+              rules={[
+                { required: true, message: `Serial ${index + 1} is required.` },
+              ]}
+            >
+              <Input />
+            </Form.Item>
+          ))
         ) : (
           <>
             <Form.Item

@@ -111,17 +111,6 @@ function AvailableMachines({ product, onChange }) {
       render: (_, record) => (record.for_maintenance ? "Yes" : "No"),
     },
     {
-      title: "Barcode",
-      render: (_, record) => (
-        <Barcode
-          value={record.barcodes[0]}
-          height={20}
-          fontSize={10}
-          displayValue={true}
-        />
-      ),
-    },
-    {
       title: "Status",
       dataIndex: "status",
     },

@@ -14,6 +14,7 @@ import {
   App,
 } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
 
 import ErrorContent from "../../../components/common/ErrorContent";
 
@@ -149,7 +150,7 @@ function PurchaseOrders() {
         const { ponumber, supplier } = record;
 
         return (
-          <div>
+          <Link to={`/purchaseOrders/${record.id}`}>
             <div>
               <Text strong>{ponumber}</Text>
             </div>
@@ -162,7 +163,7 @@ function PurchaseOrders() {
                 </Text>
               )}
             </div>
-          </div>
+          </Link>
         );
       },
     },
@@ -173,16 +174,22 @@ function PurchaseOrders() {
       render: (text) => formatWithComma(text),
     },
     {
+      title: "Date Ordered",
+      dataIndex: "created_at",
+      width: 150,
+      render: (text) => dayjs(text).format("MMMM DD, YYYY"),
+    },
+    {
       title: "Status",
       width: 100,
       render: (_, record) => {
         let color = "orange";
         const statusId = record.status_id;
-        if (statusId === 2 || statusId === 33) {
+        if (statusId === 2 || statusId === 33 || statusId === 31) {
           color = "green";
-        } else if (statusId === 6) {
+        } else if (statusId === 11) {
           color = "blue";
-        } else if (statusId === 7) {
+        } else if (statusId === 14) {
           color = "purple";
         } else if (statusId === 12) {
           color = "red";
@@ -208,8 +215,12 @@ function PurchaseOrders() {
           menuItems.unshift({ key: 33, label: statuses[33] });
         }
 
-        if (record.status_id === 33) {
+        if (record.status_id === 33 || record.status_id === 31) {
           menuItems.unshift({ key: "Receive", label: "Receive" });
+        }
+
+        if (record.status_id === 11) {
+          menuItems.unshift({ key: 14, label: statuses[14] });
         }
 
         // if (record.status_id === 6) {
@@ -325,7 +336,7 @@ function PurchaseOrders() {
         <>
           Partially Received{" "}
           {partiallyReceivedPOs.length > 0 && (
-            <Badge count={partiallyReceivedPOs.length} color="purple" />
+            <Badge count={partiallyReceivedPOs.length} color="green" />
           )}
         </>
       ),

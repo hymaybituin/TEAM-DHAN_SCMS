@@ -62,12 +62,17 @@ function Products() {
       try {
         setIsContentLoading(true);
 
-        const { data: suppliers } = await http.get("/api/suppliers");
-        const { data: productUnits } = await http.get("/api/productUnits");
-        const { data: tags } = await http.get("/api/tags");
-        const { data: locations } = await http.get("/api/locations");
-        const { data: warehouses } = await http.get("/api/warehouses");
+        const apiCalls = [
+          http.get("/api/suppliers"),
+          http.get("/api/productUnits"),
+          http.get("/api/tags"),
+          http.get("/api/locations"),
+          http.get("/api/warehouses"),
+        ];
+
         await getProducts();
+        // Execute all API calls in parallel
+        await Promise.all(apiCalls);
 
         setSuppliers(suppliers);
         setProductUnits(productUnits);

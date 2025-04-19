@@ -29,10 +29,23 @@ const { Paragraph } = Typography;
 
 function ProductCard({ product, addToCart }) {
   let actions = [];
-  if (product.available_qty === 0) {
+  // if (product.available_quantity === 0) {
+  //   actions = [<Tag color="red">Not Available</Tag>];
+  // } else if (product.product_category_id === 3) {
+  //   actions = [<Tag color="orange">Call To Order</Tag>];
+  // } else {
+  //   actions = [
+  //     <Button
+  //       type="primary"
+  //       icon={<ShoppingCartOutlined />}
+  //       onClick={() => addToCart(product)}
+  //     >
+  //       Add to Cart
+  //     </Button>,
+  //   ];
+  // }
+  if (product.available_quantity === 0) {
     actions = [<Tag color="red">Not Available</Tag>];
-  } else if (product.product_category_id === 3) {
-    actions = [<Tag color="orange">Call To Order</Tag>];
   } else {
     actions = [
       <Button
@@ -53,7 +66,7 @@ function ProductCard({ product, addToCart }) {
           <div style={{ height: "200px", overflow: "hidden" }}>
             <img
               alt={product.name}
-              src={product.img_url}
+              src={product.image_url}
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
           </div>
@@ -76,8 +89,13 @@ function ProductCard({ product, addToCart }) {
                 {product.description}
               </Paragraph>
 
-              <div>PHP {formatWithComma(product.selling_price.toFixed(2))}</div>
-              <div>Available: {product.available_qty}</div>
+              <div>
+                PHP{" "}
+                {formatWithComma(
+                  product.default_default_selling_price.toFixed(2)
+                )}
+              </div>
+              <div>Available: {product.available_quantity}</div>
             </>
           }
         />
@@ -125,7 +143,7 @@ function ProductListing() {
     setCart((prevCart) => {
       const existingProduct = prevCart.find((item) => item.id === product.id);
       if (existingProduct) {
-        if (existingProduct.quantity < product.available_qty) {
+        if (existingProduct.quantity < product.available_quantity) {
           return prevCart.map((item) =>
             item.id === product.id
               ? { ...item, quantity: item.quantity + 1 }
@@ -133,7 +151,7 @@ function ProductListing() {
           );
         } else {
           message.warning(
-            `You can only add up to ${product.available_qty} of this item.`
+            `You can only add up to ${product.available_quantity} of this item.`
           );
           return prevCart;
         }
@@ -160,7 +178,7 @@ function ProductListing() {
   );
 
   const totalPrice = cart.reduce(
-    (total, item) => total + item.selling_price * item.quantity,
+    (total, item) => total + item.default_selling_price * item.quantity,
     0
   );
 
@@ -174,13 +192,13 @@ function ProductListing() {
       setPlaceOrderLoading(true);
 
       const orderItems = cart.map((cartItem) => {
-        const { quantity, id, selling_price } = cartItem;
+        const { quantity, id, default_selling_price } = cartItem;
         return {
           product_id: id,
           qty: quantity,
-          price: selling_price,
+          price: default_selling_price,
           total_amount: Number(
-            (cartItem.selling_price * cartItem.quantity).toFixed(2)
+            (cartItem.default_selling_price * cartItem.quantity).toFixed(2)
           ),
         };
       });
@@ -238,20 +256,20 @@ function ProductListing() {
                     <Button
                       icon={<PlusOutlined />}
                       onClick={() => updateQuantity(item.id, 1)}
-                      disabled={item.quantity >= item.available_qty}
+                      disabled={item.quantity >= item.available_quantity}
                     />,
                   ]}
                 >
                   <List.Item.Meta
                     title={item.name}
                     description={`PHP ${formatWithComma(
-                      item.selling_price.toFixed(2)
+                      item.default_selling_price.toFixed(2)
                     )} x ${item.quantity}`}
                   />
                   <div>
                     PHP{" "}
                     {formatWithComma(
-                      (item.selling_price * item.quantity).toFixed(2)
+                      (item.default_selling_price * item.quantity).toFixed(2)
                     )}
                   </div>
                 </List.Item>

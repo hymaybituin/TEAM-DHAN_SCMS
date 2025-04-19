@@ -101,6 +101,8 @@ const FormProduct = ({ formData, supportingData, onSubmit }) => {
       }}
       initialValues={{
         minimum_quantity: 0,
+        supplier_price: 0,
+        profit_margin: 0,
         is_machine: false,
       }}
       onValuesChange={handleFormValuesChange}
