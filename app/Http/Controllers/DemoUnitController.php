@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DemoUnit;
 use Illuminate\Http\Request;
+use App\Models\OutgoingStock;
 use Illuminate\Support\Facades\Auth;
 
 class DemoUnitController extends Controller
@@ -13,7 +14,7 @@ class DemoUnitController extends Controller
      */
     public function index()
     {
-        return response()->json(DemoUnit::all());
+        return response()->json(DemoUnit::with(['incomingStock', 'company', 'assignedPerson', 'status', 'createdBy', 'updatedBy'])->get());
     }
 
     /**
@@ -21,20 +22,29 @@ class DemoUnitController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'incoming_id' => 'required|exists:incomings,id',
+        $validatedData = $request->validate([
+            'incoming_stock_id' => 'required|exists:incoming_stocks,id',
             'company_id' => 'required|exists:companies,id',
             'demo_start' => 'required|date',
             'demo_end' => 'nullable|date',
-            'assigned_person' => 'required|string',
-            'status' => 'required|string',
+            'assigned_person_id' => 'required|exists:users,id',
+            'status_id' => 'required|exists:statuses,id', // ✅ Changed to reference statuses table
             'notes' => 'nullable|string',
         ]);
 
-        $demoUnit = DemoUnit::create(array_merge(
-            $request->all(),
-            ['created_by' => Auth::id()]
-        ));
+        $validatedData['created_by'] = auth()->id();
+
+        // ✅ Create Demo Unit
+        $demoUnit = DemoUnit::create($validatedData);
+
+        // ✅ Automatically create an outgoing stock entry
+        OutgoingStock::create([
+            'demo_unit_id' => $demoUnit->id,
+            'incoming_id' => $validatedData['incoming_stock_id'],
+            'order_item_id' => null, // Set if applicable
+            'type' => 'Demo Deployment',
+            'remarks' => "Demo",
+        ]);
 
         return response()->json($demoUnit, 201);
     }
@@ -44,20 +54,19 @@ class DemoUnitController extends Controller
      */
     public function update(Request $request, DemoUnit $demoUnit)
     {
-        $request->validate([
-            'incoming_id' => 'exists:incomings,id',
+        $validatedData = $request->validate([
+            'incoming_stock_id' => 'exists:incoming_stocks,id',
             'company_id' => 'exists:companies,id',
             'demo_start' => 'date',
             'demo_end' => 'nullable|date',
-            'assigned_person' => 'string',
-            'status' => 'string',
+            'assigned_person_id' => 'exists:users,id',
+            'status_id' => 'exists:statuses,id', // ✅ Changed to reference statuses table
             'notes' => 'nullable|string',
         ]);
 
-        $demoUnit->update(array_merge(
-            $request->all(),
-            ['updated_by' => Auth::id()]
-        ));
+        $validatedData['updated_by'] = auth()->id();
+
+        $demoUnit->update($validatedData);
 
         return response()->json($demoUnit);
     }

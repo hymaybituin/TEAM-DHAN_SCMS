@@ -1,72 +1,57 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Models;
 
-use App\Models\DemoUnit;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class DemoUnitController extends Controller
+class DemoUnit extends Model
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    use HasFactory;
+
+    protected $table = 'demo_units';
+
+    protected $fillable = [
+        'incoming_stock_id',
+        'company_id',
+        'demo_start',
+        'demo_end',
+        'assigned_person_id',
+        'status_id', // ✅ Updated to reference statuses table
+        'notes',
+        'created_by',
+        'updated_by',
+    ];
+
+    // ✅ Relationships
+    public function incomingStock(): BelongsTo
     {
-        return response()->json(DemoUnit::all());
+        return $this->belongsTo(IncomingStock::class, 'incoming_stock_id');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function company(): BelongsTo
     {
-        $validatedData = $request->validate([
-            'incoming_id' => 'required|exists:incomings,id',
-            'company_id' => 'required|exists:companies,id',
-            'demo_start' => 'required|date',
-            'demo_end' => 'nullable|date',
-            'assigned_person' => 'required|string',
-            'status' => 'required|string',
-            'notes' => 'nullable|string',
-        ]);
-
-        $validatedData['created_by'] = auth()->id();
-
-        $demoUnit = DemoUnit::create($validatedData);
-
-        return response()->json($demoUnit, 201);
+        return $this->belongsTo(Company::class, 'company_id');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, DemoUnit $demoUnit)
+    public function assignedPerson(): BelongsTo
     {
-        $validatedData = $request->validate([
-            'incoming_id' => 'exists:incomings,id',
-            'company_id' => 'exists:companies,id',
-            'demo_start' => 'date',
-            'demo_end' => 'nullable|date',
-            'assigned_person' => 'string',
-            'status' => 'string',
-            'notes' => 'nullable|string',
-        ]);
-
-        $validatedData['updated_by'] = auth()->id();
-
-        $demoUnit->update($validatedData);
-
-        return response()->json($demoUnit);
+        return $this->belongsTo(User::class, 'assigned_person_id');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(DemoUnit $demoUnit)
+    public function status(): BelongsTo
     {
-        $demoUnit->delete();
+        return $this->belongsTo(Status::class, 'status_id'); // ✅ Added relationship for statuses
+    }
 
-        return response()->json(['message' => 'Deleted successfully']);
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }
