@@ -40,10 +40,10 @@ class DemoUnitController extends Controller
         // ✅ Automatically create an outgoing stock entry
         OutgoingStock::create([
             'demo_unit_id' => $demoUnit->id,
-            'incoming_id' => $validatedData['incoming_stock_id'],
+            'incoming_stock_id' => $validatedData['incoming_stock_id'],
             'order_item_id' => null, // Set if applicable
-            'type' => 'Demo Deployment',
-            'remarks' => "Demo",
+            'type' => 'Demo',
+            'remarks' => "",
         ]);
 
         return response()->json($demoUnit, 201);

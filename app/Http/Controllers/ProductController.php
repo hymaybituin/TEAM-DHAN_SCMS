@@ -6,6 +6,7 @@ use Log;
 use Storage;
 use Carbon\Carbon;
 use App\Models\Product;
+use App\Models\DemoUnit;
 use App\Models\ProductType;
 use Illuminate\Http\Request;
 use App\Models\PurchaseOrder;
@@ -39,12 +40,17 @@ class ProductController extends Controller
     
         $products = $query->get()
             ->map(function ($product) {  
-                $availableQuantity = $product->incomingStocks  
-                    ->filter(fn($stock) => is_null($stock->expiration_date) || !Carbon::parse($stock->expiration_date)->isPast())  
-                    ->sum('quantity');  
-    
-                $groupedStocks = $product->incomingStocks->isNotEmpty()
-                    ? $product->incomingStocks  
+                $availableQuantity = $product->incomingStocks
+                ->reject(fn($stock) => DemoUnit::where('incoming_stock_id', $stock->id)->exists()) // Exclude stocks in DemoUnit
+                ->filter(fn($stock) => is_null($stock->expiration_date) || !Carbon::parse($stock->expiration_date)->isPast()) 
+                ->sum('quantity'); 
+
+                    $filteredIncomingStocks = $product->incomingStocks->reject(fn($stock) => 
+                    DemoUnit::where('incoming_stock_id', $stock->id)->exists()
+                );
+                
+                $groupedStocks = $filteredIncomingStocks->isNotEmpty()
+                    ?  $filteredIncomingStocks
                         ->groupBy(fn($stock) => implode('|', [  
                             $stock->purchase_order_item_id,  
                             $stock->serial_number ?? 'NULL',  
@@ -124,6 +130,10 @@ class ProductController extends Controller
                         })
                         ->values()
                     : collect();
+
+                 // ✅ Calculate `total_demo_units` by counting related demo units for each product
+                $totalDemoUnits = DemoUnit::whereIn('incoming_stock_id', $product->incomingStocks->pluck('id'))->count();
+
     
                 // ✅ Calculate `total_for_calibration` and `total_for_maintenance` AFTER grouping
                 if($product->is_machine){
@@ -144,7 +154,7 @@ class ProductController extends Controller
                     'incoming_stocks' => $groupedStocks->toArray(),
                     'total_for_calibration' => $totalForCalibration, // ✅ Fixed Calculation
                     'total_for_maintenance' => $totalForMaintenance, // ✅ Fixed Calculation
-                    'total_demo_units' => 0 
+                    'total_demo_units' => $totalDemoUnits
                 ]);  
             });
     

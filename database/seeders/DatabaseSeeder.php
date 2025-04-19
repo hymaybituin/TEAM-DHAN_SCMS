@@ -151,6 +151,15 @@ class DatabaseSeeder extends Seeder
         }
             
 
+         // Seed companies
+         Company::create(['id' => 1, 'name' => 'Company 1', 'contact_info' => 'Contact info for company 1', 'website_url' => 'https://company1.com', 'industry' => 'Industry 1', 'address' => '123 Company St.', 'city' => 'City 1', 'country' => 'Country 1', 'zip_code' => '12345', 'phone_number' => '123-456-7890', 'email_address' => 'contact@company1.com', 'primary_contact_name' => 'John Smith', 'primary_contact_phone' => '123-456-7890', 'primary_contact_email' => 'john.smith@company1.com', 'additional_info' => '{}', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]);
+            Company::create(['id' => 2, 'name' => 'Company 2', 'contact_info' => 'Contact info for company 2', 'website_url' => 'https://company2.com', 'industry' => 'Industry 2', 'address' => '456 Company Ave.', 'city' => 'City 2', 'country' => 'Country 2', 'zip_code' => '67890', 'phone_number' => '987-654-3210', 'email_address' => 'contact@company2.com', 'primary_contact_name' => 'Jane Doe', 'primary_contact_phone' => '987-654-3210', 'primary_contact_email' => 'jane.doe@company2.com', 'additional_info' => '{}', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]);
+    
+                CompanyUser::create([
+                    'company_id' => 1,
+                    'user_id' =>1,
+                ]);
+                
           // Seed warehouses
           Warehouse::create(['id' => 1, 'name' => 'Default warehouse', 'address' => '123 Warehouse St.', 'created_by' => 1, 'updated_by' => 1, 'created_at' => now(), 'updated_at' => now()]);
 
