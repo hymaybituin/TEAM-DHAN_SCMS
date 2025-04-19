@@ -28,38 +28,42 @@ class PurchaseOrderController extends Controller
                 'status',
                 'items.product',
                 'items.product.productUnit',
-                'items.deliveries',
+                'items.deliveries' => function ($query) {
+                    $query->orderBy('delivery_date', 'desc'); // ✅ Order deliveries by delivery_date in descending order
+                },
             ])->findOrFail($purchaseOrderId);
-    
+
             // Calculate remaining quantity for each item and fetch relevant incoming stocks for deliveries
             $purchaseOrder->items->each(function ($item) {
                 $totalDelivered = $item->deliveries->sum('delivered_quantity');
                 $item->remaining_quantity = $item->quantity - $totalDelivered;
-    
+
                 // Fetch only incoming stocks **related to each specific delivery**
                 $item->deliveries->each(function ($delivery) {
                     $delivery->incoming_stocks = IncomingStock::where('purchase_order_item_delivery_id', $delivery->id)
                         ->get(['id', 'purchase_order_item_delivery_id', 'barcode', 'lot_number', 'serial_number', 'expiration_date']);
                 });
             });
-    
+
             return response()->json(['purchase_order' => $purchaseOrder]);
         } else {
             $purchaseOrders = PurchaseOrder::with([
                 'status',
                 'supplier',
                 'items.product',
-                'items.deliveries',
+                'items.deliveries' => function ($query) {
+                    $query->orderBy('delivery_date', 'desc'); // ✅ Order deliveries by delivery_date in descending order
+                },
             ])
-            ->orderBy('created_at', 'desc') // ✅ Ordered by creation date in descending order
+            ->orderBy('created_at', 'desc') // ✅ Ordered purchase orders by creation date in descending order
             ->get();
-    
+
             // Calculate remaining quantity for each item and fetch relevant incoming stocks for deliveries
             $purchaseOrders->each(function ($purchaseOrder) {
                 $purchaseOrder->items->each(function ($item) {
                     $totalDelivered = $item->deliveries->sum('delivered_quantity');
                     $item->remaining_quantity = $item->quantity - $totalDelivered;
-    
+
                     // Attach only incoming stocks **for each specific delivery**
                     $item->deliveries->each(function ($delivery) {
                         $delivery->incoming_stocks = IncomingStock::where('purchase_order_item_delivery_id', $delivery->id)
@@ -67,11 +71,10 @@ class PurchaseOrderController extends Controller
                     });
                 });
             });
-    
+
             return response()->json(['purchase_orders' => $purchaseOrders]);
         }
     }
-
     
     public function index()
     {
