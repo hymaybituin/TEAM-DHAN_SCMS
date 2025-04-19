@@ -164,10 +164,10 @@ class ImportCSVCommand extends Command
                 'created_by' => 1,
                 'updated_by' => 1,
             ]);
-
+    
             $purchaseOrder->ponumber = 'I-' . 'P' . str_pad($purchaseOrder->id, 6, '0', STR_PAD_LEFT);
             $purchaseOrder->save();
-
+    
             PurchaseOrderStatus::create([
                 'purchase_order_id' => $purchaseOrder->id,
                 'status_id' => $statusMap['Pending'],
@@ -176,7 +176,7 @@ class ImportCSVCommand extends Command
                 'created_by' => 1,
                 'updated_by' => 1,
             ]);
-
+    
             foreach ($products as $productData) {
                 $poItem = PurchaseOrderItem::create([
                     'purchase_order_id' => $purchaseOrder->id,
@@ -187,21 +187,22 @@ class ImportCSVCommand extends Command
                     'created_by' => 1,
                     'updated_by' => 1,
                 ]);
-
-                PurchaseOrderItemDelivery::create([
+    
+                $poItemDelivery = PurchaseOrderItemDelivery::create([
                     'purchase_order_item_id' => $poItem->id,
                     'delivered_quantity' => $productData['quantity'],
                     'delivery_date' => now(),
                     'created_by' => 1,
                     'updated_by' => 1,
                 ]);
-
+    
                 $currentYear = now()->format('Y');
                 for ($i = 0; $i < $productData['quantity']; $i++) {
                     $barcode = "{$currentYear}" . str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
                 
                     IncomingStock::create([
                         'purchase_order_item_id' => $poItem->id,
+                        'purchase_order_item_delivery_id' => $poItemDelivery->id, // ✅ Newly added field
                         'serial_number' => (strtolower($productData['serial_number']) === 'na' || empty($productData['serial_number'])) ? null : $productData['serial_number'],
                         'lot_number' => (strtolower($productData['lot_number']) === 'na' || empty($productData['lot_number'])) ? null : $productData['lot_number'],
                         'expiration_date' => ($productData['expiration_date'] === '1990-01-01' || empty($productData['expiration_date'])) ? null : $productData['expiration_date'],
@@ -213,7 +214,7 @@ class ImportCSVCommand extends Command
                     ]);
                 }
             }
-
+    
             $purchaseOrder->update(['status_id' => $statusMap['Delivered']]);
         }
     }

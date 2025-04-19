@@ -11,6 +11,7 @@ class IncomingStock extends Model
 
     protected $fillable = [
         'purchase_order_item_id',
+        'purchase_order_item_delivery_id', // Newly added field
         'serial_number',
         'lot_number',
         'expiration_date',
@@ -25,6 +26,11 @@ class IncomingStock extends Model
     public function purchaseOrderItem()
     {
         return $this->belongsTo(PurchaseOrderItem::class);
+    }
+
+    public function purchaseOrderItemDelivery()
+    {
+        return $this->belongsTo(PurchaseOrderItemDelivery::class, 'purchase_order_item_delivery_id');
     }
 
     public function product()

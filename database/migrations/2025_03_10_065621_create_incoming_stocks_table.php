@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('incoming_stocks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('purchase_order_item_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('purchase_order_item_delivery_id')->nullable()->constrained()->nullOnDelete(); // Added field
             $table->string('serial_number')->nullable();
             $table->string('lot_number')->nullable();
             $table->date('expiration_date')->nullable();

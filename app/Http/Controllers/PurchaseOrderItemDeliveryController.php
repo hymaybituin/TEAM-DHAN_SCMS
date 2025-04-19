@@ -100,27 +100,27 @@ class PurchaseOrderItemDeliveryController extends Controller
             'created_by' => $userId,
             'updated_by' => $userId,
         ]);
-    
+
         $barcodes = [];
-    
+
         // Store each item separately with a **unique barcode**
         for ($i = 0; $i < $validated['delivered_quantity']; $i++) {
+            $currentYear = now()->format('Y');
+            $barcode = "{$currentYear}" . str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+
             $incomingStock = IncomingStock::create([
                 'purchase_order_item_id' => $validated['purchase_order_item_id'],
+                'purchase_order_item_delivery_id' => $deliveryRecord->id, // ✅ Updated to use the saved delivery record
                 'serial_number' => $validated['serial_number'] ?? null,
                 'lot_number' => $validated['lot_number'] ?? null,
                 'expiration_date' => $validated['expiration_date'] ?? null,
                 'product_id' => $productId,
+                'barcode' => $barcode,
                 'quantity' => 1,
                 'created_by_user_id' => $userId,
                 'updated_by_user_id' => $userId,
             ]);
-    
-            // Generate barcode in the format: YEAR + 6 random digits
-            $barcode = "{$currentYear}" . str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
-            $incomingStock->barcode = $barcode;
-            $incomingStock->save();
-    
+
             $barcodes[] = $barcode;
         }
     
