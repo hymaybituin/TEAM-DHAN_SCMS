@@ -1,6 +1,6 @@
 <?php
 
-nnamespace App\Http\Controllers;
+namespace App\Http\Controllers;
 
 use App\Models\OutgoingStock;
 use Illuminate\Http\Request;
@@ -23,7 +23,7 @@ class OutgoingStockController extends Controller
         $validatedData = $request->validate([
             'demo_unit_id' => 'nullable|exists:demo_units,id',
             'order_item_id' => 'nullable|exists:purchase_order_items,id',
-            'incoming_id' => 'required|exists:incoming_stocks,id',
+            'incoming_stock_id' => 'required|exists:incoming_stocks,id',
             'type' => 'required|string',
             'remarks' => 'nullable|string',
         ]);
@@ -49,7 +49,7 @@ class OutgoingStockController extends Controller
         $validatedData = $request->validate([
             'demo_unit_id' => 'nullable|exists:demo_units,id',
             'order_item_id' => 'nullable|exists:purchase_order_items,id',
-            'incoming_id' => 'exists:incoming_stocks,id',
+            'incoming_stock_id' => 'exists:incoming_stocks,id',
             'type' => 'string',
             'remarks' => 'nullable|string',
         ]);

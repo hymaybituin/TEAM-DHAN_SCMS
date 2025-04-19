@@ -50,7 +50,9 @@ class PurchaseOrderController extends Controller
                 'supplier',
                 'items.product',
                 'items.deliveries',
-            ])->get();
+            ])
+            ->orderBy('created_at', 'desc') // ✅ Ordered by creation date in descending order
+            ->get();
     
             // Calculate remaining quantity for each item and fetch relevant incoming stocks for deliveries
             $purchaseOrders->each(function ($purchaseOrder) {

@@ -15,7 +15,7 @@ class OutgoingStock extends Model
     protected $fillable = [
         'demo_unit_id',
         'order_item_id',
-        'incoming_id',
+        'incoming_stock_id',
         'type',
         'remarks',
     ];
@@ -33,6 +33,6 @@ class OutgoingStock extends Model
 
     public function incomingStock(): BelongsTo
     {
-        return $this->belongsTo(IncomingStock::class, 'incoming_id');
+        return $this->belongsTo(IncomingStock::class, 'incoming_stock_id');
     }
 }

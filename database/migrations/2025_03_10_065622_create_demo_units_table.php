@@ -13,17 +13,18 @@ return new class extends Migration
     {
         Schema::create('demo_units', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('incoming_stock_id')->constrained('incoming_stocks');// Assuming incoming_id refers to another table
-            $table->foreignId('company_id')->constrained('companies'); // Assuming company_id refers to companies table
+            $table->foreignId('incoming_stock_id')->constrained('incoming_stocks')->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->dateTime('demo_start');
             $table->dateTime('demo_end')->nullable();
-            $table->string('assigned_person');
-            $table->string('status');
+            $table->foreignId('assigned_person_id')->constrained('users');
+            $table->foreignId('status_id')->constrained('statuses'); // ✅ Linked to statuses table
             $table->text('notes')->nullable();
-            $table->foreignId('created_by')->constrained('users');
-            $table->foreignId('updated_by')->nullable()->constrained('users');
+            $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
+
     }
 
     /**

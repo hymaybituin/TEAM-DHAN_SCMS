@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('demo_unit_id')->nullable()->constrained('demo_units');
             $table->foreignId('order_item_id')->nullable()->constrained('purchase_order_items');
-            $table->foreignId('incoming_id')->constrained('incoming_stocks');
+            $table->foreignId('incoming_stock_id')->constrained('incoming_stocks');
             $table->string('type');
             $table->text('remarks')->nullable();
             $table->timestamps();
