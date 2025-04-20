@@ -10,7 +10,7 @@ class ProductUnitController extends Controller
     // Retrieve all product units
     public function index()
     {
-        return ProductUnit::with('products')->get();
+        return ProductUnit::all();
     }
 
     // Store a new product unit
@@ -33,7 +33,7 @@ class ProductUnitController extends Controller
     // Show a specific product unit
     public function show($id)
     {
-        return ProductUnit::with('products')->findOrFail($id);
+        return ProductUnit::findOrFail($id);
     }
 
     // Update an existing product unit

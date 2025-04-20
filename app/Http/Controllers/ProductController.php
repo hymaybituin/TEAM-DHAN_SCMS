@@ -131,18 +131,22 @@ class ProductController extends Controller
                         ->values()
                     : collect();
 
-                 // ✅ Calculate `total_demo_units` by counting related demo units for each product
-                $totalDemoUnits = DemoUnit::whereIn('incoming_stock_id', $product->incomingStocks->pluck('id'))->count();
-
+               
     
                 // ✅ Calculate `total_for_calibration` and `total_for_maintenance` AFTER grouping
                 if($product->is_machine){
                     $totalForCalibration = $groupedStocks->filter(fn($stock) => $stock['for_calibration'] === true)->count();
                     $totalForMaintenance = $groupedStocks->filter(fn($stock) => $stock['for_maintenance'] === true)->count();
+                      // ✅ Calculate `total_demo_units` by counting related demo units for each product
+                    $totalDemoUnits = DemoUnit::whereIn('incoming_stock_id', $product->incomingStocks->pluck('id'))->count();
+
                 }
                 else{
                     $totalForCalibration = 0;
                     $totalForMaintenance = 0;
+                      // ✅ Calculate `total_demo_units` by counting related demo units for each product
+                    $totalDemoUnits =0;
+
                 }
     
                 return array_merge($product->toArray(), [  

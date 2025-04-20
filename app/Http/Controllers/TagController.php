@@ -9,9 +9,9 @@ class TagController extends Controller
 {
     // Retrieve all tags
     public function index()
-    {
-        return Tag::with('products')->get();
-    }
+{
+    return Tag::all();
+}
 
     // Store a new tag
     public function store(Request $request)
@@ -31,9 +31,8 @@ class TagController extends Controller
     // Show a specific tag
     public function show($id)
     {
-        return Tag::with('products')->findOrFail($id);
+        return Tag::findOrFail($id);
     }
-
     // Update an existing tag
     public function update(Request $request, $id)
     {

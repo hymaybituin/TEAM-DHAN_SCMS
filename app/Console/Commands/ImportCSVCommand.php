@@ -117,7 +117,10 @@ class ImportCSVCommand extends Command
 
     private function getProductUnitId(string $unitName): int
     {
-        return ProductUnit::firstOrCreate(['name' => $unitName])->id;
+        return ProductUnit::firstOrCreate(['name' => $unitName], [
+            'abbreviation' =>  $unitName,
+            'description' =>  $unitName
+        ])->id;
     }
 
     private function getSupplierId(string $supplierName): int
