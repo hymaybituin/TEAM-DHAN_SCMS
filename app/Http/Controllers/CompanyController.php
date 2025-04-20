@@ -3,76 +3,147 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Models\CompanyUser;
 use Illuminate\Http\Request;
 
 class CompanyController extends Controller
 {
     public function index()
     {
-        return Company::with(['creator', 'updater'])->get();
+        return Company::with('companyUsers.user')->get()->map(function ($company) {
+            return [
+                "name" => $company->name,
+                "contact_info" => $company->contact_info,
+                "website_url" => $company->website_url,
+                "industry" => $company->industry,
+                "address" => $company->address,
+                "city" => $company->city,
+                "country" => $company->country,
+                "zip_code" => $company->zip_code,
+                "phone_number" => $company->phone_number,
+                "email_address" => $company->email_address,
+                "primary_contact_name" => $company->primary_contact_name,
+                "primary_contact_phone" => $company->primary_contact_phone,
+                "primary_contact_email" => $company->primary_contact_email,
+                "additional_info" => $company->additional_info,
+                "created_by" => $company->created_by,
+                "updated_by" => $company->updated_by,
+                "user_id" => $company->companyUsers->pluck('user_id')->toArray(),
+                "users" => $company->companyUsers->pluck('user')->toArray(),
+            ];
+        });
     }
-
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required',
-            'contact_info' => 'required',
-            'website_url' => 'required|url',
-            'industry' => 'required',
-            'address' => 'required',
-            'city' => 'required',
-            'country' => 'required',
-            'zip_code' => 'required',
-            'phone_number' => 'required',
-            'email_address' => 'required|email',
-            'primary_contact_name' => 'required',
-            'primary_contact_phone' => 'required',
-            'primary_contact_email' => 'required|email',
-            'additional_info' => 'required',
-            'created_by' => 'required|exists:users,id',
-            'updated_by' => 'required|exists:users,id',
+        $validatedData = $request->validate([
+            'name' => 'required|string',
+            'contact_info' => 'nullable|string',
+            'website_url' => 'nullable|url',
+            'industry' => 'nullable|string',
+            'address' => 'nullable|string',
+            'city' => 'nullable|string',
+            'country' => 'nullable|string',
+            'zip_code' => 'nullable|string',
+            'phone_number' => 'nullable|string',
+            'email_address' => 'nullable|email',
+            'primary_contact_name' => 'nullable|string',
+            'primary_contact_phone' => 'nullable|string',
+            'primary_contact_email' => 'nullable|email',
+            'additional_info' => 'nullable|json',
+            'created_by' => 'nullable|exists:users,id',
+            'updated_by' => 'nullable|exists:users,id',
+            'user_id' => 'nullable|array', // Now optional
+            'user_id.*' => 'exists:users,id' // Ensures valid user IDs if provided
         ]);
-
-        return Company::create($request->all());
+    
+        $company = Company::create($validatedData);
+    
+        // Attach users only if user_id is provided and not empty
+        if (!empty($validatedData['user_id'])) {
+            foreach ($validatedData['user_id'] as $userId) {
+                CompanyUser::create([
+                    'company_id' => $company->id,
+                    'user_id' => $userId
+                ]);
+            }
+        }
+    
+        return $company;
     }
 
+    
     public function show($id)
     {
-        return Company::with(['creator', 'updater'])->findOrFail($id);
+        $company = Company::with('companyUsers.user')->findOrFail($id);
+    
+        return [
+            "name" => $company->name,
+            "contact_info" => $company->contact_info,
+            "website_url" => $company->website_url,
+            "industry" => $company->industry,
+            "address" => $company->address,
+            "city" => $company->city,
+            "country" => $company->country,
+            "zip_code" => $company->zip_code,
+            "phone_number" => $company->phone_number,
+            "email_address" => $company->email_address,
+            "primary_contact_name" => $company->primary_contact_name,
+            "primary_contact_phone" => $company->primary_contact_phone,
+            "primary_contact_email" => $company->primary_contact_email,
+            "additional_info" => $company->additional_info,
+            "created_by" => $company->created_by,
+            "updated_by" => $company->updated_by,
+            "user_id" => $company->companyUsers->pluck('user_id')->toArray(),
+            "users" => $company->companyUsers->pluck('user')->toArray(),
+        ];
     }
 
     public function update(Request $request, $id)
     {
         $company = Company::findOrFail($id);
-
-        $request->validate([
-            'name' => 'sometimes|required',
-            'contact_info' => 'sometimes|required',
-            'website_url' => 'sometimes|required|url',
-            'industry' => 'sometimes|required',
-            'address' => 'sometimes|required',
-            'city' => 'sometimes|required',
-            'country' => 'sometimes|required',
-            'zip_code' => 'sometimes|required',
-            'phone_number' => 'sometimes|required',
-            'email_address' => 'sometimes|required|email',
-            'primary_contact_name' => 'sometimes|required',
-            'primary_contact_phone' => 'sometimes|required',
-            'primary_contact_email' => 'sometimes|required|email',
-            'additional_info' => 'sometimes|required',
-            'created_by' => 'sometimes|required|exists:users,id',
-            'updated_by' => 'sometimes|required|exists:users,id',
+    
+        $validatedData = $request->validate([
+            'name' => 'nullable|string',
+            'contact_info' => 'nullable|string',
+            'website_url' => 'nullable|url',
+            'industry' => 'nullable|string',
+            'address' => 'nullable|string',
+            'city' => 'nullable|string',
+            'country' => 'nullable|string',
+            'zip_code' => 'nullable|string',
+            'phone_number' => 'nullable|string',
+            'email_address' => 'nullable|email',
+            'primary_contact_name' => 'nullable|string',
+            'primary_contact_phone' => 'nullable|string',
+            'primary_contact_email' => 'nullable|email',
+            'additional_info' => 'nullable|json',
+            'created_by' => 'nullable|exists:users,id',
+            'updated_by' => 'nullable|exists:users,id',
+            'user_id' => 'nullable|array', // Now optional
+            'user_id.*' => 'exists:users,id' // Ensures valid user IDs if provided
         ]);
-
-        $company->update($request->all());
-
+    
+        $company->update($validatedData);
+    
+        // Only update `company_users` if `user_id` is provided
+        if (isset($validatedData['user_id'])) {
+            CompanyUser::where('company_id', $company->id)->delete();
+    
+            foreach ($validatedData['user_id'] as $userId) {
+                CompanyUser::create([
+                    'company_id' => $company->id,
+                    'user_id' => $userId
+                ]);
+            }
+        }
+    
         return $company;
     }
 
+
     public function destroy($id)
     {
-        $company = Company::findOrFail($id);
-        $company->delete();
+        Company::findOrFail($id)->delete();
 
         return response()->noContent();
     }

@@ -7,11 +7,18 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with('roles')->get();
-
-        return response()->json($users);
+        $user = auth()->user();
+        $roles = $user->roles->pluck('name'); // Assuming the Role model has a 'name' attribute
+    
+        return response()->json([
+            'user_id' => $user->id,
+            'name' => $user->full_name,
+            'username' => $user->username,
+            'email' => $user->email,
+            'roles' => $roles
+        ]);
     }
 
     public function store(Request $request)
@@ -25,7 +32,7 @@ class UserController extends Controller
 
         return User::create($request->all());
     }
-    public function getUserData(Request $request)
+  /*  public function getUserData(Request $request)
     {
         $user = auth()->user();
         $roles = $user->roles->pluck('name');// Assuming the Role model has a 'name' attribute
@@ -36,11 +43,19 @@ class UserController extends Controller
             'email' => $user->email,
             'roles' => $roles
         ]);
-    }
+    }*/
 
     public function show($id)
     {
-        return User::with('roles')->findOrFail($id);
+        $user = User::with('roles')->findOrFail($id);
+    
+        return response()->json([
+            'user_id' => $user->id,
+            'name' => $user->full_name,
+            'username' => $user->username,
+            'email' => $user->email,
+            'roles' => $user->roles->pluck('name') // Extract only role names
+        ]);
     }
 
 

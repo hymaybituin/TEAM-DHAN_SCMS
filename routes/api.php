@@ -6,6 +6,7 @@ use App\Http\Controllers\TagController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\BarcodeController;
+use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\DemoUnitController;
 use App\Http\Controllers\LocationController;
@@ -30,7 +31,7 @@ Route::post('logout', [LoginController::class, 'logout'])->middleware('auth:sanc
 Route::middleware('auth:sanctum')->group(function () {
     
 
-    Route::get('user', [UserController::class,'getUserData']);
+
 
 
     Route::post('createPurchaseOrder', [PurchaseOrderController::class, 'createPurchaseOrder']);
@@ -59,6 +60,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('outgoingStocks', OutgoingStockController::class);
     Route::apiResource('demoUnits', DemoUnitController::class);
+
+    Route::resource('companies', CompanyController::class);
+    Route::resource('user', UserController::class);
+
 
 
 
