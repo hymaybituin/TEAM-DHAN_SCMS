@@ -60,6 +60,17 @@ const ViewReceive = ({ supportingData, onSubmit }) => {
     },
   ];
 
+  if (poItem.product.is_machine) {
+    tableColumn1.pop();
+    tableColumn1.pop();
+    tableColumn1.push({
+      title: "Serial Number",
+      render: (_, record) => {
+        return record.incoming_stocks[0].serial_number;
+      },
+    });
+  }
+
   const handlePrint = (id) => {
     const printContent = document.getElementById(id).innerHTML;
     const printWindow = window.open("", "", "height=600,width=800");
@@ -98,6 +109,7 @@ const ViewReceive = ({ supportingData, onSubmit }) => {
         dataSource={poItem.deliveries}
         rowKey="id"
         pagination={false}
+        defaultExpandAllRows
         expandable={{
           expandedRowRender: (record) => {
             const columns = [
