@@ -19,7 +19,7 @@ function Companies() {
   const [isFormUpdateCompanyOpen, setIsFormUpdateCompanyOpen] = useState(false);
 
   const [isContentLoading, setIsContentLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [errorMsg, setErroMsg] = useState(null);
 
   const getCompanies = async () => {
     const { data } = await http.get("/api/companies");
@@ -34,7 +34,7 @@ function Companies() {
         setUsers(users);
         await getCompanies();
       } catch (error) {
-        setError(error);
+        setErroMsg(error.message);
       } finally {
         setIsContentLoading(false);
       }
@@ -43,8 +43,8 @@ function Companies() {
     fetchCompanies();
   }, []);
 
-  if (error) {
-    return <ErrorContent />;
+  if (errorMsg) {
+    return <ErrorContent errorMessage={errorMsg} />;
   }
 
   const toggleFormCreateCompanyOpen = () => {
@@ -59,16 +59,16 @@ function Companies() {
     try {
       toggleFormCreateCompanyOpen();
       setIsContentLoading(true);
-      const users = [...formData.users];
-      delete formData.users;
+      // const users = [...formData.users];
+      // delete formData.users;
       const { data: company } = await http.post("/api/companies", {
         ...formData,
-        status_id: 1,
+        status_id: 4,
       });
-      await http.post("/api/companyMembers", { users, company_id: company.id });
+      //await http.post("/api/companyMembers", { users, company_id: company.id });
       await getCompanies();
     } catch (error) {
-      setError(error);
+      setErroMsg(error.message);
     } finally {
       setIsContentLoading(false);
     }
@@ -78,16 +78,16 @@ function Companies() {
     try {
       toggleFormUpdateCompanyOpen();
       setIsContentLoading(true);
-      const users = [...formData.users];
-      delete formData.users;
+      // const users = [...formData.users];
+      // delete formData.users;
       await http.put(`/api/companies/${selectedCompany.id}`, formData);
-      await http.put(`/api/companyMembers/${selectedCompany.id}`, {
-        users,
-        company_id: selectedCompany.id,
-      });
+      // await http.put(`/api/companyMembers/${selectedCompany.id}`, {
+      //   users,
+      //   company_id: selectedCompany.id,
+      // });
       await getCompanies();
     } catch (error) {
-      setError(error);
+      setErroMsg(error.message);
     } finally {
       setIsContentLoading(false);
     }
@@ -99,7 +99,7 @@ function Companies() {
       await http.delete(`/api/companies/${company.id}`);
       await getCompanies();
     } catch (error) {
-      setError(error);
+      setErroMsg(error.message);
     } finally {
       setIsContentLoading(false);
     }
@@ -113,15 +113,11 @@ function Companies() {
     },
     {
       title: "Email",
-      dataIndex: "email",
+      dataIndex: "email_address",
     },
     {
       title: "Phone Number",
       dataIndex: "phone_number",
-    },
-    {
-      title: "Shipping Address",
-      dataIndex: "shipping_address",
     },
     {
       title: "Action",

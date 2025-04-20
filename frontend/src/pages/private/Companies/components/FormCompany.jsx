@@ -8,7 +8,7 @@ const FormCompany = ({ formData, supportingDetails, onSubmit }) => {
     if (formData) {
       formCompanyInstance.setFieldsValue({
         ...formData,
-        users: formData.company_members.map((item) => item.user_id),
+        //users: formData.company_members.map((item) => item.user_id),
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -45,6 +45,42 @@ const FormCompany = ({ formData, supportingDetails, onSubmit }) => {
         <Input />
       </Form.Item>
       <Form.Item
+        label="Contact Info"
+        name="contact_info"
+        rules={[{ required: true }]}
+      >
+        <Input />
+      </Form.Item>
+      <Form.Item
+        label="Website URL"
+        name="website_url"
+        rules={[{ required: true }]}
+      >
+        <Input />
+      </Form.Item>
+      <Form.Item label="Industry" name="industry" rules={[{ required: true }]}>
+        <Input />
+      </Form.Item>
+      <Form.Item label="Address" name="address" rules={[{ required: true }]}>
+        <Input />
+      </Form.Item>
+      <Form.Item label="City" name="city" rules={[{ required: true }]}>
+        <Input />
+      </Form.Item>
+      <Form.Item label="Country" name="country" rules={[{ required: true }]}>
+        <Input />
+      </Form.Item>
+      <Form.Item label="Zip Code" name="zip_code" rules={[{ required: true }]}>
+        <Input />
+      </Form.Item>
+      <Form.Item
+        label="Phone Number"
+        name="phone_number"
+        rules={[{ required: true }]}
+      >
+        <Input />
+      </Form.Item>
+      <Form.Item
         label="Email"
         name="email"
         rules={[
@@ -58,13 +94,40 @@ const FormCompany = ({ formData, supportingDetails, onSubmit }) => {
         <Input />
       </Form.Item>
       <Form.Item
-        label="Phone Number"
-        name="phone_number"
+        label="Primary Contact Name"
+        name="primary_contact_name"
         rules={[{ required: true }]}
       >
         <Input />
       </Form.Item>
       <Form.Item
+        label="Primary Contact Phone"
+        name="primary_contact_phone"
+        rules={[{ required: true }]}
+      >
+        <Input />
+      </Form.Item>
+      <Form.Item
+        label="Primary Contact Email"
+        name="primary_contact_email"
+        rules={[
+          {
+            pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/i,
+            message: "Invalid email format.",
+          },
+          { required: true },
+        ]}
+      >
+        <Input />
+      </Form.Item>
+      <Form.Item
+        label="Additional Info"
+        name="additional_info"
+        rules={[{ required: true }]}
+      >
+        <Input />
+      </Form.Item>
+      {/* <Form.Item
         label="Shipping Address"
         name="shipping_address"
         rules={[{ required: true }]}
@@ -175,7 +238,7 @@ const FormCompany = ({ formData, supportingDetails, onSubmit }) => {
           description="Each user can belong to only one company. The system will automatically check this."
           showIcon
         />
-      </Form.Item>
+      </Form.Item> */}
       <Divider />
       <Form.Item noStyle>
         <div style={{ textAlign: "right" }}>

@@ -127,12 +127,12 @@ function App() {
     //   path: "/inventory",
     //   element: <Inventory />,
     // },
-    // {
-    //   title: "Users",
-    //   subTitle: "user management",
-    //   path: "/users",
-    //   element: <Users />,
-    // },
+    {
+      title: "Users",
+      subTitle: "user management",
+      path: "/users",
+      element: <Users />,
+    },
     // {
     //   title: "Reports",
     //   subTitle: "view reports here",
@@ -151,12 +151,12 @@ function App() {
       path: "/suppliers",
       element: <Suppliers />,
     },
-    // {
-    //   title: "Companies",
-    //   subTitle: "customer/company management",
-    //   path: "/companies",
-    //   element: <Companies />,
-    // },
+    {
+      title: "Companies",
+      subTitle: "customer/company management",
+      path: "/companies",
+      element: <Companies />,
+    },
     {
       title: "Locations",
       subTitle: "product/item location management",

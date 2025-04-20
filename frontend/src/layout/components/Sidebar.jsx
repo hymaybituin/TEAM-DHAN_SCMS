@@ -126,6 +126,17 @@ function Sidebar() {
       group: "Others",
     },
     {
+      key: "/companies",
+      icon: <TeamOutlined />,
+      label: <Link to="/companies">Companies</Link>,
+      group: "Others",
+    },
+    {
+      key: "/users",
+      icon: <UserOutlined />,
+      label: <Link to="/users">Users</Link>,
+    },
+    {
       key: "/locations",
       icon: <PushpinOutlined />,
       label: <Link to="/locations">Locations</Link>,

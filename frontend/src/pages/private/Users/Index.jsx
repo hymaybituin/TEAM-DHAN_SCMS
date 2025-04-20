@@ -30,7 +30,7 @@ function Users() {
   const [isFormUpdateUserOpen, setIsFormUpdateUserOpen] = useState(false);
 
   const [isContentLoading, setIsContentLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [errorMsg, setErroMsg] = useState(null);
 
   const getUsers = async () => {
     const { data } = await http.get("/api/users");
@@ -45,7 +45,7 @@ function Users() {
         setRoles(roles);
         await getUsers();
       } catch (error) {
-        setError(error);
+        setErroMsg(error.message);
       } finally {
         setIsContentLoading(false);
       }
@@ -54,8 +54,8 @@ function Users() {
     fetchUsers();
   }, []);
 
-  if (error) {
-    return <ErrorContent />;
+  if (errorMsg) {
+    return <ErrorContent errorMessage={errorMsg} />;
   }
 
   const toggleFormCreateUserOpen = () => {
@@ -73,7 +73,7 @@ function Users() {
       await http.post("/api/users", { ...formData, status_id: 1 });
       await getUsers();
     } catch (error) {
-      setError(error);
+      setErroMsg(error.message);
     } finally {
       setIsContentLoading(false);
     }
@@ -86,7 +86,7 @@ function Users() {
       await http.put(`/api/users/${selectedUser.id}`, formData);
       await getUsers();
     } catch (error) {
-      setError(error);
+      setErroMsg(error.message);
     } finally {
       setIsContentLoading(false);
     }
@@ -98,7 +98,7 @@ function Users() {
       await http.delete(`/api/users/${user.id}`);
       await getUsers();
     } catch (error) {
-      setError(error);
+      setErroMsg(error.message);
     } finally {
       setIsContentLoading(false);
     }
@@ -107,8 +107,8 @@ function Users() {
   const tableColumns = [
     {
       title: "Name",
-      dataIndex: "name",
-      ...getColumnSearchProps("name"),
+      dataIndex: "full_name",
+      ...getColumnSearchProps("full_name"),
     },
     {
       title: "Roles",
